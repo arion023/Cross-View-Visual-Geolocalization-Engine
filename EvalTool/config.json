@@ -1,0 +1,16 @@
+{
+    "model": "CVM-NET-I",
+    "weights": "./../../../references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-NET-I_model/model.ckpt",
+    "load_sat": "path/to/satellite_images",
+    "save_sat": "path/to/save_processed_satellite_images",
+    "load_gnd": "path/to/ground_images",
+    "save_gnd": "path/to/save_processed_ground_images",
+    "load_results": "path/to/load_results.json",
+    "save_results": "path/to/save_results.json",
+    "save_chart": "tmp.png",
+    "root_dir": "D:/datasets/Warsaw/",
+    "splits": "splits/val-19zl.csv",
+    "top_x": 0.1,
+    "display": 5,
+    "img": "path/to/evaluate_image.jpg"
+  }
