@@ -10,7 +10,7 @@
     "save_chart": "tmp.png",
     "root_dir": "D:/datasets/Warsaw/",
     "splits": "splits/val-19zl.csv",
-    "top_x": 0.1,
+    "top_k": 0.01,
     "display": 5,
     "img": "path/to/evaluate_image.jpg"
   }

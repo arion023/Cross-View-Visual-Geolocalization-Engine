@@ -70,19 +70,31 @@ def evaluate(dataset, grd_descriptor, sat_descriptor, topk_percent_list):
     return accuracy_list, dist_array
 
 
-def prepare_plot():
-    pass
-
-
-def display_matches(args_dict, dist_array, dataset, accuracy, topk_percent_list):
-
-    img_root = args_dict["root_dir"]
-    display_n_matches = args_dict["display"]
-
-    cols = display_n_matches + 1
-    offset = cols
+def prepare_plot(args_dict, dist_array, dataset, accuracy, topk_percent_list):
+    root_dir = args_dict["root_dir"]
+    path_to_save = args_dict["save_chart"]
 
     number_of_panos = len(dist_array[0, :])
+
+    fig, rows, cols, offset = configure_plot_params(
+        root_dir, args_dict["display"], number_of_panos
+    )
+
+    grid = (rows, cols)
+
+    ax = plt.subplot2grid(grid, (0, 1), colspan=offset - 2, rowspan=offset - 1)
+
+    display_recall(ax, topk_percent_list, accuracy)
+
+    display_matches(dataset, path_to_save, root_dir, dist_array, grid, offset)
+
+
+def configure_plot_params(img_root, display_n_matches, number_of_panos):
+
+    cols = display_n_matches + 1
+
+    offset = cols
+
     rows = number_of_panos + offset
 
     fig = plt.figure(figsize=(2 * cols, 2 * rows))
@@ -96,12 +108,19 @@ def display_matches(args_dict, dist_array, dataset, accuracy, topk_percent_list)
         additional=f'\nsplits = {args_dict["splits"].split("/")[-1]}',
     )
 
-    ax = plt.subplot2grid((rows, cols), (0, 1), colspan=offset - 2, rowspan=offset - 1)
+    fig.subplots_adjust(top=0.96, wspace=0.01, hspace=0.3)
 
-    # Plot the data
+    return fig, rows, cols, offset
+
+
+def display_recall(ax, topk_percent_list, accuracy):
     ax.plot(topk_percent_list, accuracy, label="Recall TopK% ")
 
-    fig.subplots_adjust(top=0.96, wspace=0.01, hspace=0.3)
+
+def display_matches(dataset, path_to_save, img_root, dist_array, grid, offset):
+    rows, cols = grid
+
+    number_of_panos = len(dist_array[0, :])
 
     for pano_id in range(len(dist_array[0, :])):
         row = offset + pano_id
@@ -109,35 +128,39 @@ def display_matches(args_dict, dist_array, dataset, accuracy, topk_percent_list)
         if (pano_id + 1) % (number_of_panos // 10) == 0:
             print(f"Generates comp. no. {pano_id+1} / {number_of_panos} ")
 
-        min_idx = np.argsort(dist_array[:, pano_id])
-
-        # TODO optimize
-        unique_min_idx = [
-            id for id in min_idx if id in dataset.get_unique_sat_idx_list()
-        ]
-
         # display panorama photo to match
-        ax = plt.subplot2grid((rows, cols), (row, 0))  # axes[row, 0]
+        ax = plt.subplot2grid(grid, (row, 0))
+
         img_path = dataset.get_pano(pano_id)
         display_pano(ax, img_root + img_path, dataset.get_crop())
 
         matched_sat_path = dataset.get_sat(pano_id)
+        nearest_sat_indexes = get_nearest_sat_idx_list(
+            dist_array[:, pano_id], dataset.get_unique_sat_idx_list()
+        )
 
         # display n next matches
         # 0 image in row already is pano, and it is done already, so start from second
         for col in range(1, cols):
-            ax = plt.subplot2grid((rows, cols), (row, col))  # axes[row, col]
-            next_nearest_img_idx = unique_min_idx[col - 1]
-            img_path = dataset.get_sat(next_nearest_img_idx)
+            ax = plt.subplot2grid(grid, (row, col))
+            next_nearest_sat_idx = nearest_sat_indexes[col - 1]
+            img_path = dataset.get_sat(next_nearest_sat_idx)
 
             display_match(
                 ax,
                 img_root + img_path,
-                distance=dist_array[next_nearest_img_idx, pano_id],
+                distance=dist_array[next_nearest_sat_idx, pano_id],
                 if_correct=True if img_path == matched_sat_path else False,
             )
 
-    plt.savefig(args_dict["save_chart"], bbox_inches="tight", dpi=150)
+    plt.savefig(path_to_save, bbox_inches="tight", dpi=150)
+
+
+def get_nearest_sat_idx_list(distances, unique_sat_idx_list):
+    # TODO optimize
+    min_idx = np.argsort(distances)
+    unique_min_idx = [id for id in min_idx if id in unique_sat_idx_list]
+    return unique_min_idx
 
 
 def display_pano(ax, path, crop):
@@ -358,13 +381,13 @@ if __name__ == "__main__":
             input_data,
             grd_global_descriptor,
             sat_global_descriptor,
-            topk_percent_list=topk_percent_list,  # args_dict["top_x"],
+            topk_percent_list=topk_percent_list,  # args_dict["top_k"],
         )
 
         print("model :  " + args_dict["weights"])
         print("\taccuracy = ", (accuracy * 100.0))
 
-        display_matches(
+        prepare_plot(
             args_dict, dist_array, input_data, accuracy * 100.0, topk_percent_list
         )
 
