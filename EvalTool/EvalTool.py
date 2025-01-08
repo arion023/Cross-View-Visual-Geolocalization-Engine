@@ -22,18 +22,17 @@ import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
 
-def calculate_distances():
-    pass
+def calculate_distance(grd_descriptor, sat_descriptor):
+    return 2 - 2 * np.matmul(sat_descriptor, np.transpose(grd_descriptor))
 
 
-def validate(dataset, grd_descriptor, sat_descriptor, topn):
-    accuracy = 0.0
+def calculate_accuracy(dist_array, topk_list, unique_sat_idx_list):
+
+    accuracy = np.array([0.0 for _ in topk_list])
     data_amount = 0.0
-    dist_array = 2 - 2 * np.matmul(sat_descriptor, np.transpose(grd_descriptor))
-    unique_sat_idx_list = dataset.get_unique_sat_idx_list()
-    topn_percent = math.ceil(len(unique_sat_idx_list) * topn)
-    print("unique IDs: ", unique_sat_idx_list)
-    print("Correct match if it is in top ", topn_percent, " photos.")
+
+    print("Correct match if it is in top", topk_list, "photos.")
+
     for j in range(dist_array.shape[0]):
         gt_dist = dist_array[j, j]
         false_prediction = 0
@@ -42,28 +41,51 @@ def validate(dataset, grd_descriptor, sat_descriptor, topn):
             if dist_array[i, j] < gt_dist:
                 false_prediction += 1
 
-        if false_prediction < topn_percent:
-            print("Correct match for pano with id:\t", j)
-            accuracy += 1.0
-
+        for idx, topk in enumerate(topk_list):
+            if false_prediction < topk:
+                # print("Correct match for pano with id:\t", j)
+                accuracy[idx] += 1.0
         data_amount += 1.0
 
-    accuracy /= data_amount
+    return accuracy / data_amount
+
+
+def prepare_topk_list(topk_percent_list, number_of_unique_sat):
+    return [
+        math.ceil(number_of_unique_sat * topk_percent)
+        for topk_percent in topk_percent_list
+    ]
+
+
+def evaluate(dataset, grd_descriptor, sat_descriptor, topk_percent_list):
+    dist_array = calculate_distance(grd_descriptor, sat_descriptor)
+    unique_sat_idx_list = dataset.get_unique_sat_idx_list()
+    print("unique IDs: ", unique_sat_idx_list)
+    topk_list = prepare_topk_list(topk_percent_list, len(unique_sat_idx_list))
+
+    accuracy_list = calculate_accuracy(dist_array, topk_list, unique_sat_idx_list)
 
     # np.savetxt('./Result/sorted_img_idx_by_distances.csv', tmp, fmt="%d", delimiter=',')
 
-    return accuracy, dist_array
+    return accuracy_list, dist_array
 
 
-def display_matches(args_dict, dist_array, dataset, accuracy):
+def prepare_plot():
+    pass
+
+
+def display_matches(args_dict, dist_array, dataset, accuracy, topk_percent_list):
 
     img_root = args_dict["root_dir"]
     display_n_matches = args_dict["display"]
 
-    rows = len(dist_array[0, :])
     cols = display_n_matches + 1
+    offset = cols
 
-    fig, axes = plt.subplots(rows, cols, figsize=(2 * cols, 2 * rows))
+    number_of_panos = len(dist_array[0, :])
+    rows = number_of_panos + offset
+
+    fig = plt.figure(figsize=(2 * cols, 2 * rows))
 
     add_description(
         fig,
@@ -74,38 +96,44 @@ def display_matches(args_dict, dist_array, dataset, accuracy):
         additional=f'\nsplits = {args_dict["splits"].split("/")[-1]}',
     )
 
+    ax = plt.subplot2grid((rows, cols), (0, 1), colspan=offset - 2, rowspan=offset - 1)
+
+    # Plot the data
+    ax.plot(topk_percent_list, accuracy, label="Recall TopK% ")
+
     fig.subplots_adjust(top=0.96, wspace=0.01, hspace=0.3)
 
-    for row in range(0, rows):
+    for pano_id in range(len(dist_array[0, :])):
+        row = offset + pano_id
 
-        if (row + 1) % (rows // 10) == 0:
-            print(f"Generates comp. no. {row+1} / {rows} ")
+        if (pano_id + 1) % (number_of_panos // 10) == 0:
+            print(f"Generates comp. no. {pano_id+1} / {number_of_panos} ")
 
-        min_idx = np.argsort(dist_array[:, row])
+        min_idx = np.argsort(dist_array[:, pano_id])
 
+        # TODO optimize
         unique_min_idx = [
             id for id in min_idx if id in dataset.get_unique_sat_idx_list()
         ]
 
         # display panorama photo to match
-        ax = axes[row, 0]
-        img_path = dataset.get_pano(row)
+        ax = plt.subplot2grid((rows, cols), (row, 0))  # axes[row, 0]
+        img_path = dataset.get_pano(pano_id)
         display_pano(ax, img_root + img_path, dataset.get_crop())
 
-        matched_sat_path = dataset.get_sat(row)
+        matched_sat_path = dataset.get_sat(pano_id)
 
         # display n next matches
-        for col in range(
-            1, cols
-        ):  # 0 image in row already is pano, and it is done already, so start from second
-            ax = axes[row, col]
+        # 0 image in row already is pano, and it is done already, so start from second
+        for col in range(1, cols):
+            ax = plt.subplot2grid((rows, cols), (row, col))  # axes[row, col]
             next_nearest_img_idx = unique_min_idx[col - 1]
             img_path = dataset.get_sat(next_nearest_img_idx)
 
             display_match(
                 ax,
                 img_root + img_path,
-                distance=dist_array[next_nearest_img_idx, row],
+                distance=dist_array[next_nearest_img_idx, pano_id],
                 if_correct=True if img_path == matched_sat_path else False,
             )
 
@@ -180,7 +208,7 @@ def add_description(
     fig.text(
         0.5,
         0.97,
-        f"Model: {model}\nDataset: {dataset}\nOverall accuracy: {accuracy:.1f}%\nNumber of images: {number_of_images}\nAdditional: {additional}",
+        f"Model: {model}\nDataset: {dataset}\nOverall accuracy: {str(accuracy)}%\nNumber of images: {number_of_images}\nAdditional: {additional}",
         ha="center",
     )
 
@@ -325,16 +353,19 @@ if __name__ == "__main__":
             val_i += sat_global_val.shape[0]
 
         print("   compute accuracy")
-        val_accuracy, dist_array = validate(
+        topk_percent_list = np.arange(0, 1, 0.05).tolist()
+        accuracy, dist_array = evaluate(
             input_data,
             grd_global_descriptor,
             sat_global_descriptor,
-            topn=args_dict["top_x"],
+            topk_percent_list=topk_percent_list,  # args_dict["top_x"],
         )
 
         print("model :  " + args_dict["weights"])
-        print("\taccuracy = %.1f%%" % (val_accuracy * 100.0))
+        print("\taccuracy = ", (accuracy * 100.0))
 
-        display_matches(args_dict, dist_array, input_data, val_accuracy * 100.0)
+        display_matches(
+            args_dict, dist_array, input_data, accuracy * 100.0, topk_percent_list
+        )
 
         # ---------------------------------------------------------
