@@ -6,7 +6,7 @@ import numpy as np
 class InputDataEval:
 
     # crop is tuple (top_crop, bottom_crop), if there is no crop, there should be (None, None)
-    def __init__(self, root_dir, crop = (None, None), splits="splits/val-19zl.csv"):
+    def __init__(self, root_dir, crop=(None, None), splits="splits/val-19zl.csv"):
 
         if crop[0] == 0 or crop[1] == 0:
             raise ValueError("If there is no crop, it should be (None, None)")
@@ -14,30 +14,31 @@ class InputDataEval:
         self.crop = crop
         self.img_root = root_dir
         self.splits = splits
-        self.dataset_list= self.img_root + self.splits
+        self.dataset_list = self.img_root + self.splits
 
-        print('InputData::__init__: load %s' % self.dataset_list)
+        print("InputData::__init__: load %s" % self.dataset_list)
         self.__cur_test_id = 0  # for training
         self.id_dataset_list = []
         self.id_dataset_idx_list = []
         self.id_matches_dict = {}
-        with open(self.dataset_list, 'r') as file:
+        with open(self.dataset_list, "r") as file:
             idx = 0
             for line in file:
-                data = line.split(',')
-                pano_id = (data[1].split('/')[-1]).split('.')[0]
+                data = line.split(",")
+                pano_id = (data[1].split("/")[-1]).split(".")[0]
                 # satellite filename, streetview filename, pano_id
                 self.id_dataset_list.append([data[0], data[1], pano_id])
-
 
                 self.id_dataset_idx_list.append(idx)
                 idx += 1
         self.dataset_size = len(self.id_dataset_list)
         self.make_unique_sat_idx_list()
-        print('InputData::__init__: load', self.dataset_list, ' data_size =', self.dataset_size)
-
-
-
+        print(
+            "InputData::__init__: load",
+            self.dataset_list,
+            " data_size =",
+            self.dataset_size,
+        )
 
     def next_batch_scan(self, batch_size):
         if self.__cur_test_id >= self.dataset_size:
@@ -46,7 +47,7 @@ class InputDataEval:
         elif self.__cur_test_id + batch_size >= self.dataset_size:
             batch_size = self.dataset_size - self.__cur_test_id
 
-        batch_grd = np.zeros([batch_size, 224, 1232, 3], dtype = np.float32)
+        batch_grd = np.zeros([batch_size, 224, 1232, 3], dtype=np.float32)
         batch_sat = np.zeros([batch_size, 512, 512, 3], dtype=np.float32)
         for i in range(batch_size):
             img_idx = self.__cur_test_id + i
@@ -65,7 +66,7 @@ class InputDataEval:
             # ground
             img = cv2.imread(self.img_root + self.id_dataset_list[img_idx][1])
 
-            img = img[ self.crop[0]:-self.crop[1], :, :]
+            img = img[self.crop[0] : -self.crop[1], :, :]
             img = cv2.resize(img, (1232, 224), interpolation=cv2.INTER_AREA)
 
             img = img.astype(np.float32)
@@ -103,7 +104,6 @@ class InputDataEval:
 
         self.unique_sat_idx_list = list(unique_indices.values())
 
-
     def get_dataset_list(self):
         return self.id_dataset_list
 
@@ -112,4 +112,3 @@ class InputDataEval:
 
     def reset_scan(self):
         self.__cur_test_id = 0
-
