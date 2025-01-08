@@ -1,0 +1,23 @@
+{
+    "model": "CVM-NET-I",
+    "weights": "./../../../../references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+    "load_sat_descriptors": "path/to/satellite_images",
+    "save_sat_descriptors": "path/to/save_processed_satellite_images",
+    "load_pano_descriptors": "path/to/ground_images",
+    "save_pano_descriptor": "path/to/save_processed_ground_images",
+    "load_results": "path/to/load_results.json",
+    "save_results": "path/to/save_results.json",
+    "save_chart": "./../../results/CVM-NET-I_original_Warsaw_strighten_cropped_600_800.png",
+    "additional_info": {
+      "Weights": "Weights are taken from the original paper (93% accuracy on reference model top1%)",
+      "Subset": "WHOLE DATASET (70 places)",
+      "Season": "AUTUMN",
+      "Info": "Images where strighten manually.\nBlue color image frame marks correct match of sateallite image.\nAll images have been taken with the same camera PIXPRO."
+    },
+    "root_dir": "D:/datasets/Warsaw/",
+    "crop": [600, 800],
+    "splits": "splits/val-19zl.csv",
+    "top_k": 1.0,
+    "display": 7,
+    "img": "path/to/evaluate_image.jpg"
+  }

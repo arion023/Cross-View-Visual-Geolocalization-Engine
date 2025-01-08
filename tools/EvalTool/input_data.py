@@ -6,10 +6,7 @@ import numpy as np
 class InputDataEval:
 
     # crop is tuple (top_crop, bottom_crop), if there is no crop, there should be (None, None)
-    def __init__(self, root_dir, crop=(None, None), splits="splits/val-19zl.csv"):
-
-        if crop[0] == 0 or crop[1] == 0:
-            raise ValueError("If there is no crop, it should be (None, None)")
+    def __init__(self, root_dir, crop=(0, 0), splits="splits/val-19zl.csv"):
 
         self.crop = crop
         self.img_root = root_dir
@@ -66,7 +63,7 @@ class InputDataEval:
             # ground
             img = cv2.imread(self.img_root + self.id_dataset_list[img_idx][1])
 
-            img = img[self.crop[0] : -self.crop[1], :, :]
+            img = img[self.crop[0] : len(img[:, 0, 0]) - self.crop[1], :, :]
             img = cv2.resize(img, (1232, 224), interpolation=cv2.INTER_AREA)
 
             img = img.astype(np.float32)

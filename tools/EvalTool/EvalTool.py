@@ -43,7 +43,8 @@ def calculate_accuracy(dist_array, topk_list, unique_sat_idx_list):
 
         for idx, topk in enumerate(topk_list):
             if false_prediction < topk:
-                # print("Correct match for pano with id:\t", j)
+                if idx == 0 or topk == 1:
+                    print("Correct match for pano with id:\t", j)
                 accuracy[idx] += 1.0
         data_amount += 1.0
 
@@ -60,7 +61,7 @@ def prepare_topk_list(topk_percent_list, number_of_unique_sat):
 def evaluate(dataset, grd_descriptor, sat_descriptor, topk_percent_list):
     dist_array = calculate_distance(grd_descriptor, sat_descriptor)
     unique_sat_idx_list = dataset.get_unique_sat_idx_list()
-    print("unique IDs: ", unique_sat_idx_list)
+    print("Unique IDs: ", unique_sat_idx_list)
     topk_list = prepare_topk_list(topk_percent_list, len(unique_sat_idx_list))
 
     accuracy_list = calculate_accuracy(dist_array, topk_list, unique_sat_idx_list)
@@ -76,37 +77,48 @@ def prepare_plot(args_dict, dist_array, dataset, accuracy, topk_percent_list):
 
     number_of_panos = len(dist_array[0, :])
 
+    if_recall_chart = False
+    accuracy_to_display = accuracy
+
+    if len(accuracy) > 1:
+        if_recall_chart = True
+        accuracy_to_display = "Recall Chart"
+
     fig, rows, cols, offset = configure_plot_params(
-        root_dir, args_dict["display"], number_of_panos
+        args_dict["display"], number_of_panos, if_recall_chart
     )
 
     grid = (rows, cols)
 
+    add_description(
+        fig,
+        model=args_dict["model"],
+        dataset=root_dir.split("/")[-2],
+        accuracy=accuracy_to_display,
+        number_of_panos=number_of_panos,
+        crop=dataset.get_crop(),
+        **args_dict["additional_info"],
+    )
+
     ax = plt.subplot2grid(grid, (0, 1), colspan=offset - 2, rowspan=offset - 1)
 
-    display_recall(ax, topk_percent_list, accuracy)
+    if if_recall_chart:
+        display_recall(ax, topk_percent_list, accuracy)
 
     display_matches(dataset, path_to_save, root_dir, dist_array, grid, offset)
 
 
-def configure_plot_params(img_root, display_n_matches, number_of_panos):
+def configure_plot_params(display_n_matches, number_of_panos, recall_chart):
 
     cols = display_n_matches + 1
 
-    offset = cols
+    offset = 0
+    if recall_chart:
+        offset = cols
 
     rows = number_of_panos + offset
 
     fig = plt.figure(figsize=(2 * cols, 2 * rows))
-
-    add_description(
-        fig,
-        model=args_dict["model"],
-        dataset=img_root.split("/")[-2],
-        accuracy=accuracy,
-        number_of_images=rows,
-        additional=f'\nsplits = {args_dict["splits"].split("/")[-1]}',
-    )
 
     fig.subplots_adjust(top=0.96, wspace=0.01, hspace=0.3)
 
@@ -114,7 +126,12 @@ def configure_plot_params(img_root, display_n_matches, number_of_panos):
 
 
 def display_recall(ax, topk_percent_list, accuracy):
-    ax.plot(topk_percent_list, accuracy, label="Recall TopK% ")
+    ax.plot(topk_percent_list, accuracy)
+    ax.set_title("Recall TopK% Chart")
+    ax.set_ylabel("Accuracy [%]")
+    ax.set_xlabel("Top K%")
+
+    ax.grid(True)
 
 
 def display_matches(dataset, path_to_save, img_root, dist_array, grid, offset):
@@ -168,7 +185,7 @@ def display_pano(ax, path, crop):
 
     path_splited = path.split("/")
     # write the photo description
-    ax.set_ylabel(f"Location: {path_splited[-4]}", fontsize=8)
+    ax.set_ylabel(f"Location: {path_splited[-5]}", fontsize=8)
     ax.set_xlabel(f"{path_splited[-1]}", fontsize=8)
 
     return img
@@ -208,9 +225,11 @@ def display_image(ax, path, crop=None):
     img = cv2.imread(path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
+    # make cropped part of image darker
     if crop is not None:
-        img[0 : crop[0], :, :] = img[0 : crop[0], :, :] // 2
-        img[-crop[1] :, :, :] = img[-crop[1] :, :, :] // 2
+        bottom_crop = len(img[:, 0, 0]) - crop[1]
+        img[0 : crop[0], :, :] //= 2
+        img[bottom_crop:, :, :] //= 2
 
     ax.imshow(img, aspect="equal")
     ax.set_xticks([])  # Turn off x-axis ticks
@@ -224,15 +243,35 @@ def display_image(ax, path, crop=None):
 
 
 def add_description(
-    fig, model=None, dataset=None, accuracy=None, number_of_images=None, additional=None
+    fig,
+    model=None,
+    dataset=None,
+    accuracy=None,
+    number_of_panos=None,
+    crop=(0, 0),
+    **additional,
 ):
     # Add text to the whole plot
-    fig.suptitle("Image Matches Overview")
+    fig.suptitle(f"Image Matches Overview on {dataset}", fontsize=22)
+
+    description = (
+        f"Model: {model}\n"
+        + f"Dataset: {dataset}\n"
+        + f"Overall accuracy: {str(accuracy)}%\n"
+        + f"Number of panos: {number_of_panos}\n"
+        + f"Top crop: {crop[0]}\n"
+        + f"Bottom crop: {crop[1]}\n"
+    )
+    for name, text in additional.items():
+        description += name + ": " + text + "\n"
+
     fig.text(
         0.5,
-        0.97,
-        f"Model: {model}\nDataset: {dataset}\nOverall accuracy: {str(accuracy)}%\nNumber of images: {number_of_images}\nAdditional: {additional}",
+        0.975,
+        description,
         ha="center",
+        va="top",
+        fontsize=18,
     )
 
 
@@ -248,63 +287,6 @@ def parse_arguments():
         help="Path to the config file with other args. It overrides args passed in command line",
     )
 
-    # Model-related arguments
-    parser.add_argument("--model", type=str, help="Type of model.")
-    parser.add_argument("--weights", type=str, help="Path to the weights of model.")
-
-    # Satellite image arguments
-    parser.add_argument(
-        "--load-sat", type=str, help="Path to load satellite images from."
-    )
-    parser.add_argument(
-        "--save-sat", type=str, help="Path to save processed satellite images."
-    )
-
-    # Ground image arguments
-    parser.add_argument(
-        "--load-gnd", type=str, help="Path to load ground truth images from."
-    )
-    parser.add_argument(
-        "--save-gnd", type=str, help="Path to save processed ground truth images."
-    )
-
-    # Results management
-    parser.add_argument(
-        "--load-results", type=str, help="Path to load previously calculated results."
-    )
-    parser.add_argument("--save-results", type=str, help="Path to save the results.")
-    parser.add_argument(
-        "--save-chart", type=str, help="Path to save a visual chart of the results."
-    )
-
-    # Associations and matching
-    parser.add_argument(
-        "--associations",
-        type=str,
-        help="File defining associations between satellite and ground images.",
-    )
-    parser.add_argument(
-        "--top-x",
-        type=float,
-        default="5",
-        help="Number of correct matches to consider, should be a fraction (e.g., '0.01' to consider as a success if match is in 1 percent best matches).",
-    )
-
-    # Display options
-    parser.add_argument(
-        "--display",
-        type=int,
-        default=5,
-        help="Number of best-matched images to display for evaluation.",
-    )
-
-    # Single image evaluation
-    parser.add_argument(
-        "--img",
-        type=str,
-        help="Path to the image to evaluate. Requires --load-sat to be set.",
-    )
-
     return parser.parse_args()
 
 
@@ -318,7 +300,7 @@ if __name__ == "__main__":
         args_dict = vars(args)
 
     # import data, crop = (top_crop, bottom_crop)
-    input_data = InputDataEval(crop=(400, 1200), root_dir=args_dict["root_dir"])
+    input_data = InputDataEval(crop=args_dict["crop"], root_dir=args_dict["root_dir"])
 
     # define placeholders
     sat_x = tf.placeholder(tf.float32, [None, 512, 512, 3], name="sat_x")
@@ -376,12 +358,16 @@ if __name__ == "__main__":
             val_i += sat_global_val.shape[0]
 
         print("   compute accuracy")
-        topk_percent_list = np.arange(0, 1, 0.05).tolist()
+        if args_dict["top_k"] == 1.0:
+            topk_percent_list = np.arange(0, 1, 0.01).tolist()
+        else:
+            topk_percent_list = [args_dict["top_k"]]
+
         accuracy, dist_array = evaluate(
             input_data,
             grd_global_descriptor,
             sat_global_descriptor,
-            topk_percent_list=topk_percent_list,  # args_dict["top_k"],
+            topk_percent_list=topk_percent_list,
         )
 
         print("model :  " + args_dict["weights"])
