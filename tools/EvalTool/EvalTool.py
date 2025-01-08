@@ -71,18 +71,21 @@ def evaluate(dataset, grd_descriptor, sat_descriptor, topk_percent_list):
     return accuracy_list, dist_array
 
 
-def prepare_plot(args_dict, dist_array, dataset, accuracy, topk_percent_list):
+def prepare_plot(args_dict, dist_array, dataset, accuracy, topk_percent):
     root_dir = args_dict["root_dir"]
     path_to_save = args_dict["save_chart"]
 
     number_of_panos = len(dist_array[0, :])
 
-    if_recall_chart = False
-    accuracy_to_display = accuracy
+    if_recall_chart = args_dict["recall_chart"]
 
-    if len(accuracy) > 1:
-        if_recall_chart = True
-        accuracy_to_display = "Recall Chart"
+    accuracy_to_display = ""
+    if if_recall_chart and len(accuracy) == 100:
+        accuracy_to_display = (
+            f"{accuracy[int(topk_percent*100)]:.1f}% (For topK = {topk_percent*100}%)"
+        )
+    else:
+        accuracy_to_display = f"{accuracy[0]}% (For topK = {topk_percent*100}%)"
 
     fig, rows, cols, offset = configure_plot_params(
         args_dict["display"], number_of_panos, if_recall_chart
@@ -103,7 +106,7 @@ def prepare_plot(args_dict, dist_array, dataset, accuracy, topk_percent_list):
     ax = plt.subplot2grid(grid, (0, 1), colspan=offset - 2, rowspan=offset - 1)
 
     if if_recall_chart:
-        display_recall(ax, topk_percent_list, accuracy)
+        display_recall(ax, np.arange(0, 1, 0.01).tolist(), accuracy)
 
     display_matches(dataset, path_to_save, root_dir, dist_array, grid, offset)
 
@@ -120,16 +123,29 @@ def configure_plot_params(display_n_matches, number_of_panos, recall_chart):
 
     fig = plt.figure(figsize=(2 * cols, 2 * rows))
 
-    fig.subplots_adjust(top=0.96, wspace=0.01, hspace=0.3)
+    fig.subplots_adjust(top=0.945, wspace=0.01, hspace=0.3)
 
     return fig, rows, cols, offset
 
 
 def display_recall(ax, topk_percent_list, accuracy):
-    ax.plot(topk_percent_list, accuracy)
+    x = [t * 100 for t in topk_percent_list]
+    ax.plot(x, accuracy)
     ax.set_title("Recall TopK% Chart")
     ax.set_ylabel("Accuracy [%]")
     ax.set_xlabel("Top K%")
+    ax.set_xticks([1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
+
+    for i in [1, 5, 10, 20]:
+        ax.annotate(
+            f"{accuracy[i]:.1f}%",
+            (x[i], accuracy[i]),
+            textcoords="offset points",
+            xytext=(0, 10),
+            ha="center",
+            fontsize=14,
+            fontweight="bold",
+        )
 
     ax.grid(True)
 
@@ -257,7 +273,7 @@ def add_description(
     description = (
         f"Model: {model}\n"
         + f"Dataset: {dataset}\n"
-        + f"Overall accuracy: {str(accuracy)}%\n"
+        + f"Accuracy: {str(accuracy)}\n"
         + f"Number of panos: {number_of_panos}\n"
         + f"Top crop: {crop[0]}\n"
         + f"Bottom crop: {crop[1]}\n"
@@ -358,7 +374,7 @@ if __name__ == "__main__":
             val_i += sat_global_val.shape[0]
 
         print("   compute accuracy")
-        if args_dict["top_k"] == 1.0:
+        if args_dict["recall_chart"]:
             topk_percent_list = np.arange(0, 1, 0.01).tolist()
         else:
             topk_percent_list = [args_dict["top_k"]]
@@ -374,7 +390,11 @@ if __name__ == "__main__":
         print("\taccuracy = ", (accuracy * 100.0))
 
         prepare_plot(
-            args_dict, dist_array, input_data, accuracy * 100.0, topk_percent_list
+            args_dict,
+            dist_array,
+            input_data,
+            accuracy * 100.0,
+            topk_percent=args_dict["top_k"],
         )
 
         # ---------------------------------------------------------
