@@ -5,8 +5,13 @@ import numpy as np
 
 class InputDataEval:
 
-    def __init__(self, root_dir, splits="splits/val-19zl.csv"):
+    # crop is tuple (top_crop, bottom_crop), if there is no crop, there should be (None, None)
+    def __init__(self, root_dir, crop = (None, None), splits="splits/val-19zl.csv"):
 
+        if crop[0] == 0 or crop[1] == 0:
+            raise ValueError("If there is no crop, it should be (None, None)")
+
+        self.crop = crop
         self.img_root = root_dir
         self.splits = splits
         self.dataset_list= self.img_root + self.splits
@@ -60,8 +65,7 @@ class InputDataEval:
             # ground
             img = cv2.imread(self.img_root + self.id_dataset_list[img_idx][1])
 
-
-            img = img[ : , 400:-400 ]
+            img = img[ self.crop[0]:-self.crop[1], :, :]
             img = cv2.resize(img, (1232, 224), interpolation=cv2.INTER_AREA)
 
             img = img.astype(np.float32)
@@ -74,6 +78,10 @@ class InputDataEval:
         self.__cur_test_id += batch_size
 
         return batch_sat, batch_grd
+
+    def get_crop(self):
+        # crop is tuple (bottom_crop, top_crop)
+        return self.crop
 
     def get_sat(self, idx):
         # 0 image is sat img path
