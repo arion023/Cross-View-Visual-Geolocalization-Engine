@@ -6,7 +6,7 @@ import numpy as np
 class InputDataEval:
 
     # crop is tuple (top_crop, bottom_crop), if there is no crop, there should be (None, None)
-    def __init__(self, root_dir, crop=(0, 0), splits="splits/val-19zl.csv"):
+    def __init__(self, root_dir, crop=(0, 0), splits=None):
 
         self.crop = crop
         self.img_root = root_dir
