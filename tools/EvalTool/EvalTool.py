@@ -10,6 +10,7 @@ sys.path.append(
 from cvm_net import cvm_net_I, cvm_net_II
 from input_data import InputDataEval
 import math
+import csv
 
 import argparse, json
 import matplotlib.pyplot as plt
@@ -26,7 +27,10 @@ def calculate_distance(grd_descriptor, sat_descriptor):
     return 2 - 2 * np.matmul(sat_descriptor, np.transpose(grd_descriptor))
 
 
-def calculate_accuracy(dist_array, topk_list, unique_sat_idx_list):
+def calculate_accuracy(dist_array, topk_percent_given, unique_sat_idx_list):
+    number_of_unique_sat = len(unique_sat_idx_list)
+    topk_list = prepare_topk_list(number_of_unique_sat)
+    topk_given = math.ceil(number_of_unique_sat * topk_percent_given)
 
     accuracy = np.array([0.0 for _ in topk_list])
     data_amount = 0.0
@@ -43,41 +47,43 @@ def calculate_accuracy(dist_array, topk_list, unique_sat_idx_list):
 
         for idx, topk in enumerate(topk_list):
             if false_prediction < topk:
-                if idx == 0 or topk == 1:
+                if topk == topk_given:
                     print("Correct match for pano with id:\t", j)
                 accuracy[idx] += 1.0
         data_amount += 1.0
 
-    return accuracy / data_amount
+    accuracy /= data_amount
+    return accuracy
 
 
-def prepare_topk_list(topk_percent_list, number_of_unique_sat):
+def prepare_topk_list(number_of_unique_sat):
+    topk_percent_list = np.arange(0, 1, 0.01).tolist()
     return [
         math.ceil(number_of_unique_sat * topk_percent)
         for topk_percent in topk_percent_list
     ]
 
 
-def evaluate(dataset, grd_descriptor, sat_descriptor, topk_percent_list):
+def evaluate(dataset, grd_descriptor, sat_descriptor, topk_percent):
     dist_array = calculate_distance(grd_descriptor, sat_descriptor)
     unique_sat_idx_list = dataset.get_unique_sat_idx_list()
     print("Unique IDs: ", unique_sat_idx_list)
-    topk_list = prepare_topk_list(topk_percent_list, len(unique_sat_idx_list))
-
-    accuracy_list = calculate_accuracy(dist_array, topk_list, unique_sat_idx_list)
+    accuracy_list = calculate_accuracy(dist_array, topk_percent, unique_sat_idx_list)
 
     # np.savetxt('./Result/sorted_img_idx_by_distances.csv', tmp, fmt="%d", delimiter=',')
 
     return accuracy_list, dist_array
 
 
-def prepare_plot(args_dict, dist_array, dataset, accuracy, topk_percent):
-    root_dir = args_dict["root_dir"]
-    path_to_save = args_dict["save_chart"]
+def prepare_plot(args, dist_array, dataset, accuracy, topk_percent):
+    root_dir = args["root_dir"]
+    chart_args = args["chart"]
+    path_to_save = chart_args["save_path"] + args["name"] + ".png"
 
     number_of_panos = len(dist_array[0, :])
 
-    if_recall_chart = args_dict["recall_chart"]
+    if_recall_chart = chart_args["recall_chart"]
+    if_compare_chart = chart_args["compare_chart"]
 
     accuracy_to_display = ""
     if if_recall_chart and len(accuracy) == 100:
@@ -88,19 +94,19 @@ def prepare_plot(args_dict, dist_array, dataset, accuracy, topk_percent):
         accuracy_to_display = f"{accuracy[0]}% (For topK = {topk_percent*100}%)"
 
     fig, rows, cols, offset = configure_plot_params(
-        args_dict["display"], number_of_panos, if_recall_chart
+        chart_args["display_nearest"], number_of_panos, if_recall_chart
     )
 
     grid = (rows, cols)
 
     add_description(
         fig,
-        model=args_dict["model"],
+        model=args["model"],
         dataset=root_dir.split("/")[-2],
         accuracy=accuracy_to_display,
         number_of_panos=number_of_panos,
         crop=dataset.get_crop(),
-        **args_dict["additional_info"],
+        **args["additional_info"],
     )
 
     ax = plt.subplot2grid(grid, (0, 1), colspan=offset - 2, rowspan=offset - 1)
@@ -108,7 +114,12 @@ def prepare_plot(args_dict, dist_array, dataset, accuracy, topk_percent):
     if if_recall_chart:
         display_recall(ax, np.arange(0, 1, 0.01).tolist(), accuracy)
 
-    display_matches(dataset, path_to_save, root_dir, dist_array, grid, offset)
+    if if_compare_chart:
+        display_matches(dataset, root_dir, dist_array, grid, offset)
+
+    plt.savefig(path_to_save, bbox_inches="tight", dpi=150)
+    plt.clf()
+    plt.close()
 
 
 def configure_plot_params(display_n_matches, number_of_panos, recall_chart):
@@ -121,9 +132,9 @@ def configure_plot_params(display_n_matches, number_of_panos, recall_chart):
 
     rows = number_of_panos + offset
 
-    fig = plt.figure(figsize=(2 * cols, 2 * rows))
+    fig = plt.figure(figsize=(min(20, 2 * cols), max(200, 2 * rows)))
 
-    fig.subplots_adjust(top=0.945, wspace=0.01, hspace=0.3)
+    fig.subplots_adjust(top=0.94, wspace=0.01, hspace=0.3)
 
     return fig, rows, cols, offset
 
@@ -133,7 +144,7 @@ def display_recall(ax, topk_percent_list, accuracy):
     ax.plot(x, accuracy)
     ax.set_title("Recall TopK% Chart")
     ax.set_ylabel("Accuracy [%]")
-    ax.set_xlabel("Top K%")
+    ax.set_xlabel("Top K [%]")
     ax.set_xticks([1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
 
     for i in [1, 5, 10, 20]:
@@ -150,7 +161,7 @@ def display_recall(ax, topk_percent_list, accuracy):
     ax.grid(True)
 
 
-def display_matches(dataset, path_to_save, img_root, dist_array, grid, offset):
+def display_matches(dataset, img_root, dist_array, grid, offset):
     rows, cols = grid
 
     number_of_panos = len(dist_array[0, :])
@@ -185,8 +196,6 @@ def display_matches(dataset, path_to_save, img_root, dist_array, grid, offset):
                 distance=dist_array[next_nearest_sat_idx, pano_id],
                 if_correct=True if img_path == matched_sat_path else False,
             )
-
-    plt.savefig(path_to_save, bbox_inches="tight", dpi=150)
 
 
 def get_nearest_sat_idx_list(distances, unique_sat_idx_list):
@@ -306,27 +315,16 @@ def parse_arguments():
     return parser.parse_args()
 
 
-if __name__ == "__main__":
-    args = parse_arguments()
-
-    if args.config is not None:
-        with open(args.config, "r", encoding="UTF-8") as df:
-            args_dict = json.load(df)
-    else:
-        args_dict = vars(args)
-
-    # import data, crop = (top_crop, bottom_crop)
-    input_data = InputDataEval(crop=args_dict["crop"], root_dir=args_dict["root_dir"])
-
+def prepare_and_run_model(model_name, input_data):
     # define placeholders
     sat_x = tf.placeholder(tf.float32, [None, 512, 512, 3], name="sat_x")
     grd_x = tf.placeholder(tf.float32, [None, 224, 1232, 3], name="grd_x")
     keep_prob = tf.placeholder(tf.float32)
 
     # build model
-    if args_dict["model"] == "CVM-NET-I":
+    if model_name == "CVM-NET-I":
         sat_global, grd_global = cvm_net_I(sat_x, grd_x, keep_prob, False)
-    elif args_dict["model"] == "CVM-NET-II":
+    elif model_name == "CVM-NET-II":
         sat_global, grd_global = cvm_net_II(sat_x, grd_x, keep_prob, False)
     else:
         print(
@@ -334,6 +332,9 @@ if __name__ == "__main__":
         )
 
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=None)
+
+    sat_global_descriptor = None
+    grd_global_descriptor = None
 
     # run model
     print("run model...")
@@ -344,8 +345,8 @@ if __name__ == "__main__":
         sess.run(tf.global_variables_initializer())
 
         print("load model...")
-        saver.restore(sess, args_dict["weights"])
-        print("   Model loaded from: %s" % args_dict["weights"])
+        saver.restore(sess, args["weights"])
+        print("   Model loaded from: %s" % args["weights"])
         print("load model...FINISHED")
 
         # ---------------------- validation ----------------------
@@ -372,29 +373,84 @@ if __name__ == "__main__":
                 grd_global_val
             )
             val_i += sat_global_val.shape[0]
+    return grd_global_descriptor, sat_global_descriptor
+
+
+def save_distances(file_path, model_name, distances, dataset):
+    with open(file_path + model_name, "w", newline="") as file:
+        writer = csv.writer(file)
+        sat_names = [
+            dataset.get_sat(i)
+            .split("/")[-1]
+            .split(".")[-2]  # extract name of the sat image
+            for i in range(len(distances[:, 0]))
+        ]
+
+        writer.writerow(["blank", *sat_names])
+        for j in range(len(distances[0, :])):
+            # extract panorama img name
+            pano_name = dataset.get_pano(j).split("/")[-1].split(".")[-2]
+            writer.writerow([pano_name, *distances[:, j]])
+
+
+def save_accuracy(file_path, model_name, accuracy):
+    with open(file_path, "a", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow([model_name, *accuracy])
+
+
+if __name__ == "__main__":
+    args = parse_arguments()
+
+    if args.config is not None:
+        with open(args.config, "r", encoding="UTF-8") as df:
+            args_list = json.load(df)
+    else:
+        raise Exception("No config file.")
+
+    for args in args_list:
+        model_name = args["name"]
+        input_data = InputDataEval(
+            crop=args["crop"], root_dir=args["root_dir"], splits=args["splits"]
+        )
+
+        grd_global_descriptor, sat_global_descriptor = prepare_and_run_model(
+            args["model"], input_data
+        )
+
+        # putted here thus it can reduce memory overload during plots generating.
+        tf.reset_default_graph()
 
         print("   compute accuracy")
-        if args_dict["recall_chart"]:
-            topk_percent_list = np.arange(0, 1, 0.01).tolist()
-        else:
-            topk_percent_list = [args_dict["top_k"]]
 
-        accuracy, dist_array = evaluate(
+        topk_percent = args["top_k"]
+
+        accuracy_list, dist_array = evaluate(
             input_data,
             grd_global_descriptor,
             sat_global_descriptor,
-            topk_percent_list=topk_percent_list,
+            topk_percent,
         )
 
-        print("model :  " + args_dict["weights"])
-        print("\taccuracy = ", (accuracy * 100.0))
+        if args["distances"]["save"]:
+            save_distances(
+                args["distances"]["save_path"], model_name, dist_array, input_data
+            )
+
+        accuracy = accuracy_list[int(args["top_k"] * 100)]
+        print("model :  " + args["weights"])
+
+        print("\taccuracy = ", (accuracy * 100.0), "(for topk = )", topk_percent)
+
+        if args["accuracy"]["save"]:
+            save_accuracy(args["accuracy"]["save_path"], model_name, accuracy_list)
 
         prepare_plot(
-            args_dict,
+            args,
             dist_array,
             input_data,
-            accuracy * 100.0,
-            topk_percent=args_dict["top_k"],
+            accuracy_list * 100.0,
+            topk_percent=topk_percent,
         )
 
-        # ---------------------------------------------------------
+    # ---------------------------------------------------------
