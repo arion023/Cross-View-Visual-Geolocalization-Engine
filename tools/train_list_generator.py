@@ -1,6 +1,6 @@
 import csv
 
-filename = "D:/datasets/Warsaw/splits/val-19zl.csv"
+filename = "D:/datasets/Warsaw/splits/tmp.csv"
 
 sat_prefix = "sat/waw/2022/orto/21/"
 
@@ -10,7 +10,7 @@ season = "autumn/"
 # or
 # season = "winter/"
 
-# version =  "raw"
+# version = "raw"
 # or
 version = "modified/strighten"
 
@@ -25,7 +25,7 @@ ground_format = "JPG"
 # }
 # districts = {"Center": ((31, 50), ("PIXPRO",)), "Ursynow": ((51, 70), ("PIXPRO",))}
 
-districts = {"Wilanow": ((1, 30), ("PIXPRO",))}
+districts = {"Wilanow": ((1, 30), ("Theta",))}
 
 rows = []
 

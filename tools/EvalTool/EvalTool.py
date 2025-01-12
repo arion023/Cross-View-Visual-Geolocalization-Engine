@@ -37,7 +37,7 @@ def calculate_accuracy(dist_array, topk_percent_given, unique_sat_idx_list):
 
     print("Correct match if it is in top", topk_list, "photos.")
 
-    for j in range(dist_array.shape[0]):
+    for j in range(dist_array.shape[1]):
         gt_dist = dist_array[j, j]
         false_prediction = 0
 
@@ -106,7 +106,7 @@ def prepare_plot(args, dist_array, dataset, accuracy, topk_percent):
         accuracy=accuracy_to_display,
         number_of_panos=number_of_panos,
         crop=dataset.get_crop(),
-        **args["additional_info"],
+        **args["chart"]["additional_info"],
     )
 
     ax = plt.subplot2grid(grid, (0, 1), colspan=offset - 2, rowspan=offset - 1)
@@ -353,8 +353,8 @@ def prepare_and_run_model(model_name, input_data):
         print("validate...")
         print("   compute global descriptors")
         input_data.reset_scan()
-        sat_global_descriptor = np.zeros([input_data.get_dataset_size(), 4096])
-        grd_global_descriptor = np.zeros([input_data.get_dataset_size(), 4096])
+        sat_global_descriptor = np.zeros([input_data.get_sat_dataset_size(), 4096])
+        grd_global_descriptor = np.zeros([input_data.get_pano_dataset_size(), 4096])
         val_i = 0
         while True:
             print("      progress %d" % val_i)
@@ -376,20 +376,33 @@ def prepare_and_run_model(model_name, input_data):
     return grd_global_descriptor, sat_global_descriptor
 
 
-def save_distances(file_path, model_name, distances, dataset):
-    with open(file_path + model_name, "w", newline="") as file:
-        writer = csv.writer(file)
-        sat_names = [
-            dataset.get_sat(i)
-            .split("/")[-1]
-            .split(".")[-2]  # extract name of the sat image
-            for i in range(len(distances[:, 0]))
-        ]
+def save_pano_descriptors(file_path, model_name, descriptors, dataset):
+    list_of_img_paths = [dataset.get_pano(i) for i in range(len(descriptors[:, 0]))]
+    save_descriptors(file_path, model_name, descriptors, list_of_img_paths)
 
-        writer.writerow(["blank", *sat_names])
+
+def save_sat_descriptors(file_path, model_name, descriptors, dataset):
+    list_of_img_paths = [dataset.get_sat(i) for i in range(len(descriptors[:, 0]))]
+    save_descriptors(file_path, model_name, descriptors, list_of_img_paths)
+
+
+def save_descriptors(file_path, model_name, descriptors, list_of_img_paths):
+    with open(file_path + model_name + ".csv", "w", newline="") as file:
+        writer = csv.writer(file)
+        for i, img_path in enumerate(list_of_img_paths):
+            # extract panorama img name
+            writer.writerow([img_path, *descriptors[i, :]])
+
+
+def save_distances(file_path, model_name, distances, dataset):
+    with open(file_path + model_name + ".csv", "w", newline="") as file:
+        writer = csv.writer(file)
+        sat_names = [dataset.get_sat(i) for i in range(len(distances[:, 0]))]
+
+        writer.writerow(["pano\sat", *sat_names])
         for j in range(len(distances[0, :])):
             # extract panorama img name
-            pano_name = dataset.get_pano(j).split("/")[-1].split(".")[-2]
+            pano_name = dataset.get_pano(j)  # .split("/")[-1].split(".")[-2]
             writer.writerow([pano_name, *distances[:, j]])
 
 
@@ -422,6 +435,20 @@ if __name__ == "__main__":
         tf.reset_default_graph()
 
         print("   compute accuracy")
+
+        if args["descriptors"]["save"]:
+            save_pano_descriptors(
+                args["descriptors"]["save_pano_path"],
+                model_name,
+                grd_global_descriptor,
+                input_data,
+            )
+            save_sat_descriptors(
+                args["descriptors"]["save_sat_path"],
+                model_name,
+                sat_global_descriptor,
+                input_data,
+            )
 
         topk_percent = args["top_k"]
 
