@@ -1,42 +1,44 @@
 [
 {
-  "name": "tmp",
+  "name": "auto",
   "model": "CVM-NET-I",
-  "weights": "./../../../../references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+  "weights_name": "original",
+  "weights_path": "./../../../../references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
   "root_dir": "D:/datasets/Warsaw/",
-  "crop": [0, 0],
-  "splits": "splits/tmp.csv",
   "top_k": 0.1,
-  "descriptors" : {
-    "load": false,
-    "load_pano_path": "path",
-    "load_sat_path": "path",
-
-    "save": true,
-    "save_pano_path": "./../../results/descriptors/panos/",
-    "save_sat_path": "./../../results/descriptors/sat/"
+  "dataset" : {
+    "splits":"auto",
+    "districts": ["Ursynow"],
+    "cameras": ["PIXPRO"],
+    "seasons": ["autumn"],
+    "modification": "strighten",
+    "crop": [0, 0],
+    "angle": "orto",
+    "zoom_level": 19
   },
-  "distances" : {
-    "save" : true,
-    "save_path": "./../../results/distances/"
-  },
-  "accuracy" : {
-    "save":true,
-    "save_path":"./../../results/accuracy/tmp.csv"
-  },
-  "chart" : {
-    "save_path": "./../../results/charts/",
-    "recall_chart": true,
+  "results" : {
+    "path": "./../../results/",
+    "descriptors" : {
+      "load": false,
+      "save": true
+    },
+    "distances" : {
+      "save" : true
+    },
+    "accuracy" : {
+      "save":true,
+      "filename": "tmp.csv"
+    },
+    "charts" : {
+      "recall_chart": true,
 
-    "compare_chart": true,
-    "display_nearest": 5,
+      "compare_chart": true,
+      "display_nearest": 7,
 
-    "additional_info": {
-      "Weights": "Taken from the original paper (93% accuracy on reference model top1%)",
-      "Zoom level": "19",
-      "Subset": "",
-      "Season": "Not specified",
-      "Description": ""
+      "additional_info": {
+        "weights": "Taken from the original paper (93% accuracy on reference model top1%)",
+        "description": ""
+      }
     }
   }
 }

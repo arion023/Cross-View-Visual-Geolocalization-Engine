@@ -18,6 +18,8 @@ import cv2
 import numpy as np
 import matplotlib.patches as patches
 
+from configs import load_configs
+
 import tensorflow.compat.v1 as tf
 
 tf.disable_v2_behavior()
@@ -77,7 +79,7 @@ def evaluate(dataset, grd_descriptor, sat_descriptor, topk_percent):
 
 def prepare_plot(args, dist_array, dataset, accuracy, topk_percent):
     root_dir = args["root_dir"]
-    chart_args = args["chart"]
+    chart_args = args["results"]["charts"]
     path_to_save = chart_args["save_path"] + args["name"] + ".png"
 
     number_of_panos = len(dist_array[0, :])
@@ -106,7 +108,6 @@ def prepare_plot(args, dist_array, dataset, accuracy, topk_percent):
         accuracy=accuracy_to_display,
         number_of_panos=number_of_panos,
         crop=dataset.get_crop(),
-        **args["chart"]["additional_info"],
     )
 
     ax = plt.subplot2grid(grid, (0, 1), colspan=offset - 2, rowspan=offset - 1)
@@ -345,8 +346,8 @@ def prepare_and_run_model(model_name, input_data):
         sess.run(tf.global_variables_initializer())
 
         print("load model...")
-        saver.restore(sess, args["weights"])
-        print("   Model loaded from: %s" % args["weights"])
+        saver.restore(sess, args["weights_path"])
+        print("   Model loaded from: %s" % args["weights_path"])
         print("load model...FINISHED")
 
         # ---------------------- validation ----------------------
@@ -376,26 +377,26 @@ def prepare_and_run_model(model_name, input_data):
     return grd_global_descriptor, sat_global_descriptor
 
 
-def save_pano_descriptors(file_path, model_name, descriptors, dataset):
+def save_pano_descriptors(file_path, descriptors, dataset):
     list_of_img_paths = [dataset.get_pano(i) for i in range(len(descriptors[:, 0]))]
-    save_descriptors(file_path, model_name, descriptors, list_of_img_paths)
+    save_descriptors(file_path, descriptors, list_of_img_paths)
 
 
-def save_sat_descriptors(file_path, model_name, descriptors, dataset):
+def save_sat_descriptors(file_path, descriptors, dataset):
     list_of_img_paths = [dataset.get_sat(i) for i in range(len(descriptors[:, 0]))]
-    save_descriptors(file_path, model_name, descriptors, list_of_img_paths)
+    save_descriptors(file_path, descriptors, list_of_img_paths)
 
 
-def save_descriptors(file_path, model_name, descriptors, list_of_img_paths):
-    with open(file_path + model_name + ".csv", "w", newline="") as file:
+def save_descriptors(file_path, descriptors, list_of_img_paths):
+    with open(file_path, "w", newline="") as file:
         writer = csv.writer(file)
         for i, img_path in enumerate(list_of_img_paths):
             # extract panorama img name
             writer.writerow([img_path, *descriptors[i, :]])
 
 
-def save_distances(file_path, model_name, distances, dataset):
-    with open(file_path + model_name + ".csv", "w", newline="") as file:
+def save_distances(file_path, distances, dataset):
+    with open(file_path, "w", newline="") as file:
         writer = csv.writer(file)
         sat_names = [dataset.get_sat(i) for i in range(len(distances[:, 0]))]
 
@@ -416,15 +417,16 @@ if __name__ == "__main__":
     args = parse_arguments()
 
     if args.config is not None:
-        with open(args.config, "r", encoding="UTF-8") as df:
-            args_list = json.load(df)
+        args_list = load_configs(args.config)
     else:
         raise Exception("No config file.")
 
     for args in args_list:
         model_name = args["name"]
         input_data = InputDataEval(
-            crop=args["crop"], root_dir=args["root_dir"], splits=args["splits"]
+            crop=args["dataset"]["crop"],
+            root_dir=args["root_dir"],
+            splits="splits/" + args["dataset"]["splits"],
         )
 
         grd_global_descriptor, sat_global_descriptor = prepare_and_run_model(
@@ -436,16 +438,16 @@ if __name__ == "__main__":
 
         print("   compute accuracy")
 
-        if args["descriptors"]["save"]:
+        results_args = args["results"]
+
+        if results_args["descriptors"]["save"]:
             save_pano_descriptors(
-                args["descriptors"]["save_pano_path"],
-                model_name,
+                results_args["descriptors"]["pano_save_path"],
                 grd_global_descriptor,
                 input_data,
             )
             save_sat_descriptors(
-                args["descriptors"]["save_sat_path"],
-                model_name,
+                results_args["descriptors"]["sat_save_path"],
                 sat_global_descriptor,
                 input_data,
             )
@@ -459,18 +461,22 @@ if __name__ == "__main__":
             topk_percent,
         )
 
-        if args["distances"]["save"]:
+        if results_args["distances"]["save"]:
             save_distances(
-                args["distances"]["save_path"], model_name, dist_array, input_data
+                results_args["distances"]["save_path"],
+                dist_array,
+                input_data,
             )
 
         accuracy = accuracy_list[int(args["top_k"] * 100)]
-        print("model :  " + args["weights"])
+        print("model :  " + args["weights_name"])
 
         print("\taccuracy = ", (accuracy * 100.0), "(for topk = )", topk_percent)
 
-        if args["accuracy"]["save"]:
-            save_accuracy(args["accuracy"]["save_path"], model_name, accuracy_list)
+        if results_args["accuracy"]["save"]:
+            save_accuracy(
+                results_args["accuracy"]["save_path"], model_name, accuracy_list
+            )
 
         prepare_plot(
             args,
