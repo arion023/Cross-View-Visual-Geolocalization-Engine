@@ -46,7 +46,7 @@ def load_configs(path):
                 config["dataset"]["splits"] = sfg.get_filename()
             else:
                 print(
-                    "Attributes for dataset in config file will be ignored since splits file is provided."
+                    "Attributes for dataset in config file will be ignored since split file is provided."
                 )
 
             results = config["results"]
@@ -68,9 +68,7 @@ def load_configs(path):
                 rasults_prefix_path + accuracy_subpath + results["accuracy"]["filename"]
             )
 
-            results["charts"]["save_path"] = (
-                rasults_prefix_path + charts_subpath + config["name"] + ".png"
-            )
+            results["charts"]["save_path"] = rasults_prefix_path + charts_subpath
         configs.append(config)
 
     return configs

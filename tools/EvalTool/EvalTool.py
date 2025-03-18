@@ -211,7 +211,7 @@ def display_pano(ax, path, crop):
 
     path_splited = path.split("/")
     # write the photo description
-    ax.set_ylabel(f"Location: {path_splited[-5]}", fontsize=8)
+    ax.set_ylabel(f"{path_splited[-5]}", fontsize=8)
     ax.set_xlabel(f"{path_splited[-1]}", fontsize=8)
 
     return img
@@ -471,7 +471,13 @@ if __name__ == "__main__":
         accuracy = accuracy_list[int(args["top_k"] * 100)]
         print("model :  " + args["weights_name"])
 
-        print("\taccuracy = ", (accuracy * 100.0), "(for topk = )", topk_percent)
+        print(
+            "\taccuracy = ",
+            (accuracy * 100.0),
+            "(for topk = ",
+            topk_percent * 100,
+            "% )",
+        )
 
         if results_args["accuracy"]["save"]:
             save_accuracy(
@@ -485,5 +491,7 @@ if __name__ == "__main__":
             accuracy_list * 100.0,
             topk_percent=topk_percent,
         )
+    print("FINISHED")
+    print("Model name: ", model_name)
 
     # ---------------------------------------------------------
