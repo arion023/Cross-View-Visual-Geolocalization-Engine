@@ -12,6 +12,8 @@ class SplitFileGenerator:
         "Ursynow": (51, 70),
     }
 
+    districts_aliases = {"Warsaw": ["Wilanow", "Center", "Ursynow"]}
+
     def __init__(self, config):
         self.dataset_config = config["dataset"]
 
@@ -28,7 +30,14 @@ class SplitFileGenerator:
         self.cameras = self.dataset_config["cameras"]
 
         self.districts = {}
-        for dist in self.dataset_config["districts"]:
+        tmp_districts = self.dataset_config["districts"]
+
+        for dist in tmp_districts:
+            if dist in self.districts_aliases:
+                tmp_districts += self.districts_aliases[dist]
+                tmp_districts.remove(dist)
+
+        for dist in tmp_districts:
             self.districts[dist] = self.districts_mapped[dist]
 
         self.splits_prefix = config["root_dir"] + "splits/"

@@ -96,7 +96,7 @@ def prepare_plot(args, dist_array, dataset, accuracy, topk_percent):
         accuracy_to_display = f"{accuracy[0]}% (For topK = {topk_percent*100}%)"
 
     fig, rows, cols, offset = configure_plot_params(
-        chart_args["display_nearest"], number_of_panos, if_recall_chart
+        chart_args, number_of_panos, if_recall_chart
     )
 
     grid = (rows, cols)
@@ -104,7 +104,7 @@ def prepare_plot(args, dist_array, dataset, accuracy, topk_percent):
     add_description(
         fig,
         model=args["model"],
-        dataset=root_dir.split("/")[-2],
+        dataset="_".join(args["dataset"]["districts"]),
         accuracy=accuracy_to_display,
         number_of_panos=number_of_panos,
         crop=dataset.get_crop(),
@@ -123,9 +123,9 @@ def prepare_plot(args, dist_array, dataset, accuracy, topk_percent):
     plt.close()
 
 
-def configure_plot_params(display_n_matches, number_of_panos, recall_chart):
+def configure_plot_params(chart_args, number_of_panos, recall_chart):
 
-    cols = display_n_matches + 1
+    cols = chart_args["display_nearest"] + 2  # 1 for pano and 1 for correct sat match
 
     offset = 0
     if recall_chart:
@@ -135,7 +135,7 @@ def configure_plot_params(display_n_matches, number_of_panos, recall_chart):
 
     fig = plt.figure(figsize=(min(20, 2 * cols), max(200, 2 * rows)))
 
-    fig.subplots_adjust(top=0.94, wspace=0.01, hspace=0.3)
+    fig.subplots_adjust(top=0.94, wspace=0.05, hspace=0.3)
 
     return fig, rows, cols, offset
 
@@ -186,7 +186,8 @@ def display_matches(dataset, img_root, dist_array, grid, offset):
 
         # display n next matches
         # 0 image in row already is pano, and it is done already, so start from second
-        for col in range(1, cols):
+        # last column is sat image with correct match
+        for col in range(1, cols - 1):
             ax = plt.subplot2grid(grid, (row, col))
             next_nearest_sat_idx = nearest_sat_indexes[col - 1]
             img_path = dataset.get_sat(next_nearest_sat_idx)
@@ -197,6 +198,16 @@ def display_matches(dataset, img_root, dist_array, grid, offset):
                 distance=dist_array[next_nearest_sat_idx, pano_id],
                 if_correct=True if img_path == matched_sat_path else False,
             )
+
+        ax = plt.subplot2grid(grid, (row, cols - 1))
+
+        display_match(
+            ax,
+            img_root + matched_sat_path,
+            distance=dist_array[pano_id, pano_id],
+            if_correct=True,
+            color="yellow",
+        )
 
 
 def get_nearest_sat_idx_list(distances, unique_sat_idx_list):
@@ -217,7 +228,7 @@ def display_pano(ax, path, crop):
     return img
 
 
-def display_match(ax, path, distance, if_correct):
+def display_match(ax, path, distance, if_correct, color="blue"):
     img = display_image(ax, path)
     path_splited = path.split("/")
     ax.set_xlabel(f"{path_splited[-1]}\nDistance: {distance:.4f}", fontsize=8)
@@ -237,7 +248,7 @@ def display_match(ax, path, distance, if_correct):
             img.shape[1],
             img.shape[0],
             linewidth=4,
-            edgecolor="blue",
+            edgecolor=color,
             facecolor="none",
         )
 
@@ -491,7 +502,7 @@ if __name__ == "__main__":
             accuracy_list * 100.0,
             topk_percent=topk_percent,
         )
-    print("FINISHED")
-    print("Model name: ", model_name)
+        print("Job finished for model: ")
+        print("\t", model_name)
 
     # ---------------------------------------------------------
