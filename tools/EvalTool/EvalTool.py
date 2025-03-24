@@ -9,6 +9,7 @@ sys.path.append(
 
 from cvm_net import cvm_net_I, cvm_net_II
 from input_data import InputDataEval
+from input_data import InputDataContainer
 import math
 import csv
 
@@ -17,8 +18,6 @@ import matplotlib.pyplot as plt
 import cv2
 import numpy as np
 import matplotlib.patches as patches
-
-from configs import load_configs
 
 import tensorflow.compat.v1 as tf
 
@@ -31,13 +30,14 @@ def calculate_distance(grd_descriptor, sat_descriptor):
 
 def calculate_accuracy(dist_array, topk_percent_given, unique_sat_idx_list):
     number_of_unique_sat = len(unique_sat_idx_list)
-    topk_list = prepare_topk_list(number_of_unique_sat)
+    topk_list_by_percents = prepare_topk_list(number_of_unique_sat)
     topk_given = math.ceil(number_of_unique_sat * topk_percent_given)
 
-    accuracy = np.array([0.0 for _ in topk_list])
+    accuracy_by_percents = np.array([0.0 for _ in topk_list_by_percents])
+    accuracy = np.array([0.0 for _ in range(100)])
     data_amount = 0.0
 
-    print("Correct match if it is in top", topk_list, "photos.")
+    print("Correct match if it is in top", topk_list_by_percents, "photos.")
 
     for j in range(dist_array.shape[1]):
         gt_dist = dist_array[j, j]
@@ -47,15 +47,21 @@ def calculate_accuracy(dist_array, topk_percent_given, unique_sat_idx_list):
             if dist_array[i, j] < gt_dist:
                 false_prediction += 1
 
-        for idx, topk in enumerate(topk_list):
-            if false_prediction < topk:
-                if topk == topk_given:
+        for idx, topk_by_percents in enumerate(topk_list_by_percents):
+            if false_prediction < topk_by_percents:
+                if topk_by_percents == topk_given:
                     print("Correct match for pano with id:\t", j)
-                accuracy[idx] += 1.0
+                accuracy_by_percents[idx] += 1.0
+
+        for topk in range(len(accuracy)):
+            if false_prediction < topk:
+                accuracy[topk] += 1.0
+
         data_amount += 1.0
 
+    accuracy_by_percents /= data_amount
     accuracy /= data_amount
-    return accuracy
+    return accuracy_by_percents, accuracy
 
 
 def prepare_topk_list(number_of_unique_sat):
@@ -70,22 +76,24 @@ def evaluate(dataset, grd_descriptor, sat_descriptor, topk_percent):
     dist_array = calculate_distance(grd_descriptor, sat_descriptor)
     unique_sat_idx_list = dataset.get_unique_sat_idx_list()
     print("Unique IDs: ", unique_sat_idx_list)
-    accuracy_list = calculate_accuracy(dist_array, topk_percent, unique_sat_idx_list)
+    accuracy_by_percent, accuracy = calculate_accuracy(
+        dist_array, topk_percent, unique_sat_idx_list
+    )
 
     # np.savetxt('./Result/sorted_img_idx_by_distances.csv', tmp, fmt="%d", delimiter=',')
 
-    return accuracy_list, dist_array
+    return accuracy_by_percent, accuracy, dist_array
 
 
-def prepare_plot(args, dist_array, dataset, accuracy, topk_percent):
-    root_dir = args["root_dir"]
-    chart_args = args["results"]["charts"]
-    path_to_save = chart_args["save_path"] + args["name"] + ".png"
+def prepare_plot(input_data, dist_array, dataset, accuracy, topk_percent):
+    root_dir = input_data.root_dir
+    charts = input_data.results.charts
+    path_to_save = charts.path + input_data.name + ".png"
 
     number_of_panos = len(dist_array[0, :])
 
-    if_recall_chart = chart_args["recall_chart"]
-    if_compare_chart = chart_args["compare_chart"]
+    if_recall_chart = charts.recall_chart
+    if_compare_chart = charts.compare_chart
 
     accuracy_to_display = ""
     if if_recall_chart and len(accuracy) == 100:
@@ -96,15 +104,15 @@ def prepare_plot(args, dist_array, dataset, accuracy, topk_percent):
         accuracy_to_display = f"{accuracy[0]}% (For topK = {topk_percent*100}%)"
 
     fig, rows, cols, offset = configure_plot_params(
-        chart_args, number_of_panos, if_recall_chart
+        charts, number_of_panos, if_recall_chart
     )
 
     grid = (rows, cols)
 
     add_description(
         fig,
-        model=args["model"],
-        dataset="_".join(args["dataset"]["districts"]),
+        model=input_data.model,
+        dataset="_".join(input_data.dataset.districts),
         accuracy=accuracy_to_display,
         number_of_panos=number_of_panos,
         crop=dataset.get_crop(),
@@ -123,9 +131,9 @@ def prepare_plot(args, dist_array, dataset, accuracy, topk_percent):
     plt.close()
 
 
-def configure_plot_params(chart_args, number_of_panos, recall_chart):
+def configure_plot_params(charts, number_of_panos, recall_chart):
 
-    cols = chart_args["display_nearest"] + 2  # 1 for pano and 1 for correct sat match
+    cols = charts.display_nearest + 2  # 1 for pano and 1 for correct sat match
 
     offset = 0
     if recall_chart:
@@ -327,16 +335,18 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def prepare_and_run_model(model_name, input_data):
+def prepare_and_run_model(input_data):
     # define placeholders
+    model_type = input_data.model
+    dataset = input_data.dataset
     sat_x = tf.placeholder(tf.float32, [None, 512, 512, 3], name="sat_x")
     grd_x = tf.placeholder(tf.float32, [None, 224, 1232, 3], name="grd_x")
     keep_prob = tf.placeholder(tf.float32)
 
     # build model
-    if model_name == "CVM-NET-I":
+    if model_type == "CVM-NET-I":
         sat_global, grd_global = cvm_net_I(sat_x, grd_x, keep_prob, False)
-    elif model_name == "CVM-NET-II":
+    elif model_type == "CVM-NET-II":
         sat_global, grd_global = cvm_net_II(sat_x, grd_x, keep_prob, False)
     else:
         print(
@@ -357,20 +367,20 @@ def prepare_and_run_model(model_name, input_data):
         sess.run(tf.global_variables_initializer())
 
         print("load model...")
-        saver.restore(sess, args["weights_path"])
-        print("   Model loaded from: %s" % args["weights_path"])
+        saver.restore(sess, input_data.weights_path)
+        print("   Model loaded from: %s" % input_data.weights_path)
         print("load model...FINISHED")
 
         # ---------------------- validation ----------------------
         print("validate...")
         print("   compute global descriptors")
-        input_data.reset_scan()
-        sat_global_descriptor = np.zeros([input_data.get_sat_dataset_size(), 4096])
-        grd_global_descriptor = np.zeros([input_data.get_pano_dataset_size(), 4096])
+        dataset.reset_scan()
+        sat_global_descriptor = np.zeros([dataset.get_sat_dataset_size(), 4096])
+        grd_global_descriptor = np.zeros([dataset.get_pano_dataset_size(), 4096])
         val_i = 0
         while True:
             print("      progress %d" % val_i)
-            batch_sat, batch_grd = input_data.next_batch_scan(12)
+            batch_sat, batch_grd = dataset.next_batch_scan(12)
             if batch_sat is None:
                 break
             feed_dict = {sat_x: batch_sat, grd_x: batch_grd, keep_prob: 1.0}
@@ -388,118 +398,57 @@ def prepare_and_run_model(model_name, input_data):
     return grd_global_descriptor, sat_global_descriptor
 
 
-def save_pano_descriptors(file_path, descriptors, dataset):
-    list_of_img_paths = [dataset.get_pano(i) for i in range(len(descriptors[:, 0]))]
-    save_descriptors(file_path, descriptors, list_of_img_paths)
-
-
-def save_sat_descriptors(file_path, descriptors, dataset):
-    list_of_img_paths = [dataset.get_sat(i) for i in range(len(descriptors[:, 0]))]
-    save_descriptors(file_path, descriptors, list_of_img_paths)
-
-
-def save_descriptors(file_path, descriptors, list_of_img_paths):
-    with open(file_path, "w", newline="") as file:
-        writer = csv.writer(file)
-        for i, img_path in enumerate(list_of_img_paths):
-            # extract panorama img name
-            writer.writerow([img_path, *descriptors[i, :]])
-
-
-def save_distances(file_path, distances, dataset):
-    with open(file_path, "w", newline="") as file:
-        writer = csv.writer(file)
-        sat_names = [dataset.get_sat(i) for i in range(len(distances[:, 0]))]
-
-        writer.writerow(["pano\sat", *sat_names])
-        for j in range(len(distances[0, :])):
-            # extract panorama img name
-            pano_name = dataset.get_pano(j)  # .split("/")[-1].split(".")[-2]
-            writer.writerow([pano_name, *distances[:, j]])
-
-
-def save_accuracy(file_path, model_name, accuracy):
-    with open(file_path, "a", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow([model_name, *accuracy])
-
-
 if __name__ == "__main__":
     args = parse_arguments()
 
     if args.config is not None:
-        args_list = load_configs(args.config)
+        input_data_container = InputDataContainer(args.config)
     else:
         raise Exception("No config file.")
 
-    for args in args_list:
-        model_name = args["name"]
-        input_data = InputDataEval(
-            crop=args["dataset"]["crop"],
-            root_dir=args["root_dir"],
-            splits="splits/" + args["dataset"]["splits"],
-        )
+    for input_data in input_data_container:
+        model_name = input_data.name
+        results = input_data.results
 
-        grd_global_descriptor, sat_global_descriptor = prepare_and_run_model(
-            args["model"], input_data
-        )
+        grd_global_descriptor, sat_global_descriptor = prepare_and_run_model(input_data)
+
+        results.set_pano_descriptors(grd_global_descriptor)
+        results.set_sat_descriptors(sat_global_descriptor)
 
         # putted here thus it can reduce memory overload during plots generating.
         tf.reset_default_graph()
 
         print("   compute accuracy")
 
-        results_args = args["results"]
+        topk_percent = input_data.top_k
 
-        if results_args["descriptors"]["save"]:
-            save_pano_descriptors(
-                results_args["descriptors"]["pano_save_path"],
-                grd_global_descriptor,
-                input_data,
-            )
-            save_sat_descriptors(
-                results_args["descriptors"]["sat_save_path"],
-                sat_global_descriptor,
-                input_data,
-            )
-
-        topk_percent = args["top_k"]
-
-        accuracy_list, dist_array = evaluate(
-            input_data,
+        accuracy_by_percent_list, accuracy_list, dist_array = evaluate(
+            input_data.dataset,
             grd_global_descriptor,
             sat_global_descriptor,
             topk_percent,
         )
 
-        if results_args["distances"]["save"]:
-            save_distances(
-                results_args["distances"]["save_path"],
-                dist_array,
-                input_data,
-            )
+        results.set_distances(dist_array)
 
-        accuracy = accuracy_list[int(args["top_k"] * 100)]
-        print("model :  " + args["weights_name"])
+        accuracy_by_percent = accuracy_by_percent_list[int(input_data.top_k * 100)]
+        print("model :  " + input_data.weights_name)
 
         print(
             "\taccuracy = ",
-            (accuracy * 100.0),
+            (accuracy_by_percent * 100.0),
             "(for topk = ",
             topk_percent * 100,
             "% )",
         )
 
-        if results_args["accuracy"]["save"]:
-            save_accuracy(
-                results_args["accuracy"]["save_path"], model_name, accuracy_list
-            )
+        results.set_percentage_accuracy(accuracy_by_percent_list)
 
         prepare_plot(
-            args,
-            dist_array,
             input_data,
-            accuracy_list * 100.0,
+            dist_array,
+            input_data.dataset,
+            accuracy_by_percent_list * 100.0,
             topk_percent=topk_percent,
         )
         print("Job finished for model: ")

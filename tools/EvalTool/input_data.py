@@ -1,26 +1,204 @@
 import cv2
 import random
 import numpy as np
+import json
+from SplitFileGenerator import SplitFileGenerator
+from munch import Munch
+import csv
+
+
+class InputDataContainer:
+    def __init__(self, config_path):
+        self.inputdata_list = []
+        with open(config_path, "r") as cf:
+            json_configs = json.load(cf)
+            for config in json_configs:
+                self.inputdata_list.append(InputDataEval(config))
+        self.current_idx = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.current_idx < len(self.inputdata_list):
+            self.current_idx += 1
+            return self.inputdata_list[self.current_idx - 1]
+        else:
+            self.current_idx = 0
+            raise StopIteration
 
 
 class InputDataEval:
 
     # crop is tuple (top_crop, bottom_crop), if there is no crop, there should be (None, None)
-    def __init__(self, root_dir, crop=(0, 0), splits=None):
+    def __init__(self, config_dict):
 
-        self.crop = crop
-        self.img_root = root_dir
-        self.splits = splits
-        self.dataset_list = self.img_root + self.splits
+        self.__dict__.update(config_dict)
+        self.update()
 
-        print("InputData::__init__: load %s" % self.dataset_list)
+    def update(self):
+        self.dataset = Dataset(self.dataset, self)
+        self.update_name()
+        self.results = Results(self.results, self)
+
+    def update_name(self):
+        if self.name == "auto":
+            self.name = (
+                self.model
+                + "_"
+                + self.weights_name
+                + "_"
+                + "_".join(self.dataset.districts)
+                + "_"
+                + "_".join(self.dataset.cameras)
+                + "_"
+                + "_".join(self.dataset.seasons)
+                + "_"
+                + self.dataset.modification
+                + "_"
+                + "_".join([str(c) for c in self.dataset.crop])
+                + "_"
+                + self.dataset.angle
+                + "_"
+                + str(self.dataset.zoom_level)
+                + "zl"
+            )
+
+
+class Results(Munch):
+
+    sat_descriptors_subpath = "descriptors/sat/"
+    pano_descriptors_subpath = "descriptors/panos/"
+    distances_subpath = "distances/"
+    accuracy_subpath = "accuracy/"
+    charts_subpath = "charts/"
+
+    def __init__(self, results_config, input_data):
+        super().__init__(results_config)
+        self.input_data = input_data
+        self.name = input_data.name
+        self.descriptors = Munch()
+        self.distances = Munch()
+        self.accuracy = Munch(self.accuracy)
+        self.charts = Munch(self.charts)
+
+        rasults_prefix_path = self.path
+
+        self.descriptors.sat_save_path = (
+            rasults_prefix_path + self.sat_descriptors_subpath + self.name + ".csv"
+        )
+
+        self.descriptors.pano_save_path = (
+            rasults_prefix_path + self.pano_descriptors_subpath + self.name + ".csv"
+        )
+
+        self.distances.save_path = (
+            rasults_prefix_path + self.distances_subpath + self.name + ".csv"
+        )
+
+        self.accuracy.percentage_save_path = (
+            rasults_prefix_path
+            + self.accuracy_subpath
+            + self.accuracy.filename
+            + "_percentage.csv"
+        )
+
+        self.accuracy.top100_save_path = (
+            rasults_prefix_path
+            + self.accuracy_subpath
+            + self.accuracy.filename
+            + "_top100.csv "
+        )
+
+        self.charts.path = rasults_prefix_path + self.charts_subpath
+
+    def set_sat_descriptors(self, sat_descriptors):
+        self.descriptors.sat_values = sat_descriptors
+        self.save_sat_descriptors()
+
+    def set_pano_descriptors(self, pano_descriptors):
+        self.descriptors.pano_values = pano_descriptors
+        self.save_pano_descriptors()
+
+    def set_distances(self, distances):
+        self.distances.values = distances
+        self.save_distances()
+
+    def set_percentage_accuracy(self, accuracy):
+        self.accuracy.percentage_values = accuracy
+        self.save_percentage_accuracy()
+
+    def set_top100_accuracy(self, accuracy):
+        self.accuracy.top100_values = accuracy
+        self.save_top100_accuracy()
+
+    def save_pano_descriptors(self):
+        descriptors = self.descriptors.pano_values
+        list_of_img_paths = [
+            self.input_data.dataset.get_pano(i) for i in range(len(descriptors[:, 0]))
+        ]
+        with open(self.descriptors.pano_save_path, "w", newline="") as file:
+            writer = csv.writer(file)
+            for i, img_path in enumerate(list_of_img_paths):
+                # extract panorama img name
+                writer.writerow([img_path, *descriptors[i, :]])
+
+    def save_sat_descriptors(self):
+        descriptors = self.descriptors.sat_values
+        list_of_img_paths = [
+            self.input_data.dataset.get_sat(i) for i in range(len(descriptors[:, 0]))
+        ]
+        with open(self.descriptors.sat_save_path, "w", newline="") as file:
+            writer = csv.writer(file)
+            for i, img_path in enumerate(list_of_img_paths):
+                # extract panorama img name
+                writer.writerow([img_path, *descriptors[i, :]])
+
+    def save_distances(self):
+        with open(self.distances.save_path, "w", newline="") as file:
+            writer = csv.writer(file)
+            sat_names = [
+                self.input_data.dataset.get_sat(i)
+                for i in range(len(self.distances.values[:, 0]))
+            ]
+
+            writer.writerow(["pano\sat", *sat_names])
+            for j in range(len(self.distances.values[0, :])):
+                # extract panorama img name
+                pano_name = self.input_data.dataset.get_pano(
+                    j
+                )  # .split("/")[-1].split(".")[-2]
+                writer.writerow([pano_name, *self.distances.values[:, j]])
+
+    def save_percentage_accuracy(self):
+        accuracy = self.accuracy.percentage_values
+        with open(self.accuracy.percentage_save_path, "a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow([self.name, *accuracy])
+
+    def save_top100_accuracy(self):
+        accuracy = self.accuracy.top100_values
+        with open(self.accuracy.top100_save_path, "a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow([self.name, *accuracy])
+
+
+class Dataset:
+    def __init__(self, datset_config, input_data):
+        self.root_dir = input_data.root_dir
+        self.input_data = input_data
+        self.__dict__.update(datset_config)
+        print(self.__dict__)
+        self.update()
+
+        print("InputData::__init__: load %s" % self.splitfile)
         self.__cur_test_id = 0  # for training
         self.id_dataset_list = []
         self.id_dataset_idx_list = []
         self.id_matches_dict = {}
         self.pano_dataset_size = 0
         self.sat_dataset_size = 0
-        with open(self.dataset_list, "r") as file:
+        with open(self.split_path, "r") as file:
             idx = 0
             for line in file:
                 data = line.split(",")
@@ -38,10 +216,23 @@ class InputDataEval:
         self.make_unique_sat_idx_list()
         print(
             "InputData::__init__: load",
-            self.dataset_list,
+            self.splitfile,
             " data_size =",
             self.dataset_size,
         )
+
+    def update(self):
+        self.update_split()
+
+    def update_split(self):
+        if self.splitfile == "auto":
+            sfg = SplitFileGenerator(self, self.input_data.root_dir)
+            self.splitfile = sfg.generate()
+        else:
+            print(
+                "Attributes for dataset in config file will be ignored since split file is provided."
+            )
+        self.split_path = self.input_data.root_dir + self.splitfile
 
     def next_batch_scan(self, batch_size):
         if self.__cur_test_id >= self.dataset_size:
@@ -65,7 +256,7 @@ class InputDataEval:
             img_idx = self.__cur_test_id + i
 
             # satellite
-            img = cv2.imread(self.img_root + self.id_dataset_list[img_idx][0])
+            img = cv2.imread(self.root_dir + self.id_dataset_list[img_idx][0])
             img = cv2.resize(img, (512, 512), interpolation=cv2.INTER_AREA)
 
             img = img.astype(np.float32)
@@ -77,7 +268,7 @@ class InputDataEval:
 
             # ground
             if self.id_dataset_list[img_idx][1] != "":
-                img = cv2.imread(self.img_root + self.id_dataset_list[img_idx][1])
+                img = cv2.imread(self.root_dir + self.id_dataset_list[img_idx][1])
 
                 img = img[self.crop[0] : len(img[:, 0, 0]) - self.crop[1], :, :]
                 img = cv2.resize(img, (1232, 224), interpolation=cv2.INTER_AREA)
@@ -125,7 +316,7 @@ class InputDataEval:
 
         self.unique_sat_idx_list = list(unique_indices.values())
 
-    def get_dataset_list(self):
+    def get_id_dataset_list(self):
         return self.id_dataset_list
 
     def get_dataset_size(self):

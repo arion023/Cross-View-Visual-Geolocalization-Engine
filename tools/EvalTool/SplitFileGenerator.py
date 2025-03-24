@@ -14,23 +14,21 @@ class SplitFileGenerator:
 
     districts_aliases = {"Warsaw": ["Wilanow", "Center", "Ursynow"]}
 
-    def __init__(self, config):
-        self.dataset_config = config["dataset"]
+    def __init__(self, dataset, root_dir):
+        self.root_dir = root_dir
+        self.dataset = dataset
 
         self.sat_prefix = (
             "sat/waw/2022/"
-            + self.dataset_config["angle"]
+            + self.dataset.angle
             + "/"
-            + str(self.dataset_config["zoom_level"])
+            + str(self.dataset.zoom_level)
             + "/"
         )
         self.panos_prefix = "panos/"
-        self.seasons = self.dataset_config["seasons"]
-        self.modification = self.dataset_config["modification"]
-        self.cameras = self.dataset_config["cameras"]
 
         self.districts = {}
-        tmp_districts = self.dataset_config["districts"]
+        tmp_districts = self.dataset.districts
 
         for dist in tmp_districts:
             if dist in self.districts_aliases:
@@ -40,30 +38,29 @@ class SplitFileGenerator:
         for dist in tmp_districts:
             self.districts[dist] = self.districts_mapped[dist]
 
-        self.splits_prefix = config["root_dir"] + "splits/"
+        self.splits_prefix = "splits/"
         self.generate_filename()
 
     def generate_filename(self):
         filename = (
-            "_".join(self.dataset_config["districts"])
+            "_".join(self.districts)
             + "_"
-            + "_".join(self.cameras)
+            + "_".join(self.dataset.cameras)
             + "_"
-            + "_".join(self.seasons)
+            + "_".join(self.dataset.seasons)
             + "_"
-            + self.modification
+            + self.dataset.modification
             + "_"
-            + self.dataset_config["angle"]
+            + self.dataset.angle
             + "_"
-            + str(self.dataset_config["zoom_level"])
+            + str(self.dataset.zoom_level)
             + "zl"
             + ".csv"
         )
         self.set_filename(filename)
 
     def set_filename(self, filename):
-        self.filename = filename
-        self.splits_path = self.splits_prefix + self.filename
+        self.filename = self.splits_prefix + filename
 
     def generate(self, filename=None):
         if filename is not None:
@@ -71,8 +68,8 @@ class SplitFileGenerator:
 
         rows = []
         for dist, ids in self.districts.items():
-            for camera in self.cameras:
-                for season in self.seasons:
+            for camera in self.dataset.cameras:
+                for season in self.dataset.seasons:
                     panos_full_prefix = (
                         self.panos_prefix
                         + season
@@ -81,7 +78,7 @@ class SplitFileGenerator:
                         + "/"
                         + camera
                         + "/"
-                        + self.modification
+                        + self.dataset.modification
                         + "/"
                     )
 
@@ -89,9 +86,11 @@ class SplitFileGenerator:
                         rows += self.generate_rows(panos_full_prefix, i, 2)
 
         self.save_split(rows)
+        print("Split file generated: ", self.filename)
+        return self.filename
 
     def save_split(self, rows):
-        with open(self.splits_path, mode="w", newline="") as file:
+        with open(self.root_dir + self.filename, mode="w", newline="") as file:
             # Create a csv.writer object
             writer = csv.writer(file)
             # Write data to the CSV file
@@ -110,5 +109,5 @@ class SplitFileGenerator:
     def get_filename(self):
         return self.filename
 
-    def get_splits_path(self):
-        return self.splits_path
+    def get_split_path(self):
+        return self.split_path
