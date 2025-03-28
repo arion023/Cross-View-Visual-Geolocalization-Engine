@@ -39,6 +39,7 @@ def generate_recall_chart(input_data_containter):
         axs[0].plot(values["percentage_values"], label=key)
         axs[1].plot(values["top100_values"], label=key)
 
+    plt.legend()
     plt.show()
 
 
