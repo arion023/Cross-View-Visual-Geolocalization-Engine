@@ -28,12 +28,13 @@ class SplitFileGenerator:
         self.panos_prefix = "panos/"
 
         self.districts = {}
-        tmp_districts = self.dataset.districts
+        tmp_districts = []
 
-        for dist in tmp_districts:
+        for dist in self.dataset.districts:
             if dist in self.districts_aliases:
                 tmp_districts += self.districts_aliases[dist]
-                tmp_districts.remove(dist)
+            else:
+                tmp_districts += dist
 
         for dist in tmp_districts:
             self.districts[dist] = self.districts_mapped[dist]
@@ -43,7 +44,7 @@ class SplitFileGenerator:
 
     def generate_filename(self):
         filename = (
-            "_".join(self.districts)
+            "_".join(self.dataset.districts)
             + "_"
             + "_".join(self.dataset.cameras)
             + "_"
