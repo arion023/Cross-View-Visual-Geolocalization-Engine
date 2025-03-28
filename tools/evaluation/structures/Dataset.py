@@ -103,13 +103,15 @@ class Dataset:
                 sat_only_counter += 1
 
         self.__cur_test_id += batch_size
-        print(
-            "In that batch were",
-            sat_only_counter,
-            "/",
-            batch_size,
-            "images without panorama image.",
-        )
+
+        if sat_only_counter > 0:
+            print(
+                "In that batch were",
+                sat_only_counter,
+                "/",
+                batch_size,
+                "images without panorama image.",
+            )
         return batch_sat, batch_grd
 
     def get_crop(self):
