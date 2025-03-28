@@ -4,12 +4,13 @@
 import sys
 
 sys.path.append(
-    "C:/Users/masik/Workspace/inżynierka/repos/crossview_localisation_tensorflow-2.x/src/CVM-Net"
+    "C:/Users/masik/Workspace/inzynierka/repos/crossview_localisation_tensorflow-2.x/src/CVM-Net"
 )
 
 from cvm_net import cvm_net_I, cvm_net_II
-from input_data import InputDataEval
-from input_data import InputDataContainer
+from structures.InputData import InputDataEval
+from structures.InputData import InputDataContainer
+from charts.MatchesChart import MatchesChart
 import math
 import csv
 
@@ -210,7 +211,7 @@ if __name__ == "__main__":
         results.set_percentage_accuracy(accuracy_by_percent_list)
         results.set_top100_accuracy(accuracy_by_top100_list)
 
-        results.prepare_plot()
+        MatchesChart(input_data)
 
         print("Job finished for model: ")
         print("\t", model_name)
