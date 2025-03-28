@@ -28,16 +28,18 @@ def calculate_distance(grd_descriptor, sat_descriptor):
     return 2 - 2 * np.matmul(sat_descriptor, np.transpose(grd_descriptor))
 
 
-def calculate_accuracy(dist_array, topk_percent_given, unique_sat_idx_list):
+def calculate_accuracy(dist_array, input_data):
+    topk_percent = input_data.top_k
+    unique_sat_idx_list = input_data.dataset.get_unique_sat_idx_list()
     number_of_unique_sat = len(unique_sat_idx_list)
-    topk_list_by_percents = prepare_topk_list(number_of_unique_sat)
-    topk_given = math.ceil(number_of_unique_sat * topk_percent_given)
+    photos_number_list = topk_percent_to_numbers(number_of_unique_sat)
+    topk_given = math.ceil(number_of_unique_sat * topk_percent)
 
-    accuracy_by_percents = np.array([0.0 for _ in topk_list_by_percents])
-    accuracy = np.array([0.0 for _ in range(100)])
+    accuracy_by_percents = np.array([0.0 for _ in photos_number_list])
+    accuracy_by_top100 = np.array([0.0 for _ in range(100)])
     data_amount = 0.0
 
-    print("Correct match if it is in top", topk_list_by_percents, "photos.")
+    # print("Correct match if it is in top", photos_number_list, "photos.")
 
     for j in range(dist_array.shape[1]):
         gt_dist = dist_array[j, j]
@@ -47,24 +49,24 @@ def calculate_accuracy(dist_array, topk_percent_given, unique_sat_idx_list):
             if dist_array[i, j] < gt_dist:
                 false_prediction += 1
 
-        for idx, topk_by_percents in enumerate(topk_list_by_percents):
-            if false_prediction < topk_by_percents:
-                if topk_by_percents == topk_given:
+        for idx, photos_number in enumerate(photos_number_list):
+            if false_prediction < photos_number:
+                if photos_number == topk_given:
                     print("Correct match for pano with id:\t", j)
                 accuracy_by_percents[idx] += 1.0
 
-        for topk in range(len(accuracy)):
+        for topk in range(100):
             if false_prediction < topk:
-                accuracy[topk] += 1.0
+                accuracy_by_top100[topk] += 1.0
 
         data_amount += 1.0
 
     accuracy_by_percents /= data_amount
-    accuracy /= data_amount
-    return accuracy_by_percents, accuracy
+    accuracy_by_top100 /= data_amount
+    return accuracy_by_percents, accuracy_by_top100
 
 
-def prepare_topk_list(number_of_unique_sat):
+def topk_percent_to_numbers(number_of_unique_sat):
     topk_percent_list = np.arange(0, 1, 0.01).tolist()
     return [
         math.ceil(number_of_unique_sat * topk_percent)
@@ -72,252 +74,16 @@ def prepare_topk_list(number_of_unique_sat):
     ]
 
 
-def evaluate(dataset, grd_descriptor, sat_descriptor, topk_percent):
+def evaluate(input_data, grd_descriptor, sat_descriptor):
     dist_array = calculate_distance(grd_descriptor, sat_descriptor)
-    unique_sat_idx_list = dataset.get_unique_sat_idx_list()
-    print("Unique IDs: ", unique_sat_idx_list)
-    accuracy_by_percent, accuracy = calculate_accuracy(
-        dist_array, topk_percent, unique_sat_idx_list
-    )
+    # accuracy_by_percent, accuracy = calculate_top100_accuracy(
+    #     dist_array, topk_percent, unique_sat_idx_list
+    # )
+    accuracy_by_percent, accuracy = calculate_accuracy(dist_array, input_data)
 
     # np.savetxt('./Result/sorted_img_idx_by_distances.csv', tmp, fmt="%d", delimiter=',')
 
     return accuracy_by_percent, accuracy, dist_array
-
-
-def prepare_plot(input_data, dist_array, dataset, accuracy, topk_percent):
-    root_dir = input_data.root_dir
-    charts = input_data.results.charts
-    path_to_save = charts.path + input_data.name + ".png"
-
-    number_of_panos = len(dist_array[0, :])
-
-    if_recall_chart = charts.recall_chart
-    if_compare_chart = charts.compare_chart
-
-    accuracy_to_display = ""
-    if if_recall_chart and len(accuracy) == 100:
-        accuracy_to_display = (
-            f"{accuracy[int(topk_percent*100)]:.1f}% (For topK = {topk_percent*100}%)"
-        )
-    else:
-        accuracy_to_display = f"{accuracy[0]}% (For topK = {topk_percent*100}%)"
-
-    fig, rows, cols, offset = configure_plot_params(
-        charts, number_of_panos, if_recall_chart
-    )
-
-    grid = (rows, cols)
-
-    add_description(
-        fig,
-        model=input_data.model,
-        dataset="_".join(input_data.dataset.districts),
-        accuracy=accuracy_to_display,
-        number_of_panos=number_of_panos,
-        crop=dataset.get_crop(),
-    )
-
-    ax = plt.subplot2grid(grid, (0, 1), colspan=offset - 2, rowspan=offset - 1)
-
-    if if_recall_chart:
-        display_recall(ax, np.arange(0, 1, 0.01).tolist(), accuracy)
-
-    if if_compare_chart:
-        display_matches(dataset, root_dir, dist_array, grid, offset)
-
-    plt.savefig(path_to_save, bbox_inches="tight", dpi=150)
-    plt.clf()
-    plt.close()
-
-
-def configure_plot_params(charts, number_of_panos, recall_chart):
-
-    cols = charts.display_nearest + 2  # 1 for pano and 1 for correct sat match
-
-    offset = 0
-    if recall_chart:
-        offset = cols
-
-    rows = number_of_panos + offset
-
-    fig = plt.figure(figsize=(min(20, 2 * cols), max(200, 2 * rows)))
-
-    fig.subplots_adjust(top=0.94, wspace=0.05, hspace=0.3)
-
-    return fig, rows, cols, offset
-
-
-def display_recall(ax, topk_percent_list, accuracy):
-    x = [t * 100 for t in topk_percent_list]
-    ax.plot(x, accuracy)
-    ax.set_title("Recall TopK% Chart")
-    ax.set_ylabel("Accuracy [%]")
-    ax.set_xlabel("Top K [%]")
-    ax.set_xticks([1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
-
-    for i in [1, 5, 10, 20]:
-        ax.annotate(
-            f"{accuracy[i]:.1f}%",
-            (x[i], accuracy[i]),
-            textcoords="offset points",
-            xytext=(0, 10),
-            ha="center",
-            fontsize=14,
-            fontweight="bold",
-        )
-
-    ax.grid(True)
-
-
-def display_matches(dataset, img_root, dist_array, grid, offset):
-    rows, cols = grid
-
-    number_of_panos = len(dist_array[0, :])
-
-    for pano_id in range(len(dist_array[0, :])):
-        row = offset + pano_id
-
-        if (pano_id + 1) % (number_of_panos // 10) == 0:
-            print(f"Generates comp. no. {pano_id+1} / {number_of_panos} ")
-
-        # display panorama photo to match
-        ax = plt.subplot2grid(grid, (row, 0))
-
-        img_path = dataset.get_pano(pano_id)
-        display_pano(ax, img_root + img_path, dataset.get_crop())
-
-        matched_sat_path = dataset.get_sat(pano_id)
-        nearest_sat_indexes = get_nearest_sat_idx_list(
-            dist_array[:, pano_id], dataset.get_unique_sat_idx_list()
-        )
-
-        # display n next matches
-        # 0 image in row already is pano, and it is done already, so start from second
-        # last column is sat image with correct match
-        for col in range(1, cols - 1):
-            ax = plt.subplot2grid(grid, (row, col))
-            next_nearest_sat_idx = nearest_sat_indexes[col - 1]
-            img_path = dataset.get_sat(next_nearest_sat_idx)
-
-            display_match(
-                ax,
-                img_root + img_path,
-                distance=dist_array[next_nearest_sat_idx, pano_id],
-                if_correct=True if img_path == matched_sat_path else False,
-            )
-
-        ax = plt.subplot2grid(grid, (row, cols - 1))
-
-        display_match(
-            ax,
-            img_root + matched_sat_path,
-            distance=dist_array[pano_id, pano_id],
-            if_correct=True,
-            color="yellow",
-        )
-
-
-def get_nearest_sat_idx_list(distances, unique_sat_idx_list):
-    # TODO optimize
-    min_idx = np.argsort(distances)
-    unique_min_idx = [id for id in min_idx if id in unique_sat_idx_list]
-    return unique_min_idx
-
-
-def display_pano(ax, path, crop):
-    img = display_image(ax, path, crop)
-
-    path_splited = path.split("/")
-    # write the photo description
-    ax.set_ylabel(f"{path_splited[-5]}", fontsize=8)
-    ax.set_xlabel(f"{path_splited[-1]}", fontsize=8)
-
-    return img
-
-
-def display_match(ax, path, distance, if_correct, color="blue"):
-    img = display_image(ax, path)
-    path_splited = path.split("/")
-    ax.set_xlabel(f"{path_splited[-1]}\nDistance: {distance:.4f}", fontsize=8)
-
-    rect = patches.Rectangle(
-        (0, 0),
-        img.shape[1],
-        img.shape[0],
-        linewidth=3,
-        edgecolor="red",
-        facecolor="none",
-    )
-
-    if if_correct:
-        rect = patches.Rectangle(
-            (0, 0),
-            img.shape[1],
-            img.shape[0],
-            linewidth=4,
-            edgecolor=color,
-            facecolor="none",
-        )
-
-    ax.add_patch(rect)
-
-    return img
-
-
-def display_image(ax, path, crop=None):
-
-    img = cv2.imread(path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    # make cropped part of image darker
-    if crop is not None:
-        bottom_crop = len(img[:, 0, 0]) - crop[1]
-        img[0 : crop[0], :, :] //= 2
-        img[bottom_crop:, :, :] //= 2
-
-    ax.imshow(img, aspect="equal")
-    ax.set_xticks([])  # Turn off x-axis ticks
-    ax.set_yticks([])  # Turn off y-axis ticks
-    ax.spines["top"].set_visible(False)  # Turn off top spine
-    ax.spines["right"].set_visible(False)  # Turn off right spine
-    ax.spines["left"].set_visible(False)  # Turn off left spine
-    ax.spines["bottom"].set_visible(False)  # Turn off bottom spine
-
-    return img
-
-
-def add_description(
-    fig,
-    model=None,
-    dataset=None,
-    accuracy=None,
-    number_of_panos=None,
-    crop=(0, 0),
-    **additional,
-):
-    # Add text to the whole plot
-    fig.suptitle(f"Image Matches Overview on {dataset}", fontsize=22)
-
-    description = (
-        f"Model: {model}\n"
-        + f"Dataset: {dataset}\n"
-        + f"Accuracy: {str(accuracy)}\n"
-        + f"Number of panos: {number_of_panos}\n"
-        + f"Top crop: {crop[0]}\n"
-        + f"Bottom crop: {crop[1]}\n"
-    )
-    for name, text in additional.items():
-        description += name + ": " + text + "\n"
-
-    fig.text(
-        0.5,
-        0.975,
-        description,
-        ha="center",
-        va="top",
-        fontsize=18,
-    )
 
 
 def parse_arguments():
@@ -422,11 +188,10 @@ if __name__ == "__main__":
 
         topk_percent = input_data.top_k
 
-        accuracy_by_percent_list, accuracy_list, dist_array = evaluate(
-            input_data.dataset,
+        accuracy_by_percent_list, accuracy_by_top100_list, dist_array = evaluate(
+            input_data,
             grd_global_descriptor,
             sat_global_descriptor,
-            topk_percent,
         )
 
         results.set_distances(dist_array)
@@ -443,14 +208,10 @@ if __name__ == "__main__":
         )
 
         results.set_percentage_accuracy(accuracy_by_percent_list)
+        results.set_top100_accuracy(accuracy_by_top100_list)
 
-        prepare_plot(
-            input_data,
-            dist_array,
-            input_data.dataset,
-            accuracy_by_percent_list * 100.0,
-            topk_percent=topk_percent,
-        )
+        results.prepare_plot()
+
         print("Job finished for model: ")
         print("\t", model_name)
 
