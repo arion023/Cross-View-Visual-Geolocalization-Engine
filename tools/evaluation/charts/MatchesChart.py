@@ -204,7 +204,7 @@ class MatchesChart:
         return img
 
     # TODO add custom description
-    def add_description(self, custom=""):
+    def add_description(self):
         # Add text to the whole plot
         self.fig.suptitle(
             f"Image Matches Overview on\n{self.input_data.dataset.splitfile}",
@@ -220,11 +220,13 @@ class MatchesChart:
 
         description = (
             f"Model: {self.input_data.model}\n"
+            + f"Weights: {self.input_data.weights_name}\n"
             + f"Dataset: {self.input_data.dataset.splitfile}\n"
             + f"Accuracy [%]: {str(accuracy_to_display)}\n"
             + f"Number of panos: {number_of_panos}\n"
             + f"Top crop: {self.input_data.dataset.crop[0]}\n"
             + f"Bottom crop: {self.input_data.dataset.crop[1]}\n"
+            + f"\n{self.input_data.charts.custom_info}\n"
         )
 
         self.fig.text(
