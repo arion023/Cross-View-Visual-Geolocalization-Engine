@@ -49,8 +49,7 @@ class MatchesChart:
         number_of_panos = len(self.results.distances.values[0, :])
 
         offset = 0
-        if self.input_data.charts.recall_chart:
-            offset = cols
+        offset = cols
 
         rows = number_of_panos + offset
 
@@ -210,8 +209,7 @@ class MatchesChart:
 
         accuracy_to_display = ""
 
-        if self.input_data.charts.recall_chart:
-            accuracy_to_display = f"{self.results.accuracy.percentage_values[int(self.input_data.top_k*100)]*100:.1f}% (For topK = {self.input_data.top_k*100}%)"
+        accuracy_to_display = f"{self.results.accuracy.percentage_values[int(self.input_data.top_k*100)]*100:.1f}% (For topK = {self.input_data.top_k*100}%)"
 
         number_of_panos = len(self.results.distances.values[0, :])
 
