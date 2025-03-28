@@ -35,11 +35,8 @@ class MatchesChart:
 
         ax = plt.subplot2grid(grid, (0, 1), colspan=offset - 2, rowspan=offset - 1)
 
-        if self.input_data.charts.recall_chart:
-            self.display_recall(ax)
-
-        if self.input_data.charts.matches_chart:
-            self.display_matches()
+        self.display_recall(ax)
+        self.display_matches()
 
         plt.savefig(self.save_path, bbox_inches="tight", dpi=150)
         plt.clf()

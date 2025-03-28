@@ -211,7 +211,9 @@ if __name__ == "__main__":
         results.set_percentage_accuracy(accuracy_by_percent_list)
         results.set_top100_accuracy(accuracy_by_top100_list)
 
-        MatchesChart(input_data)
+        if input_data.charts.matches_chart:
+            print("   generate matches chart")
+            MatchesChart(input_data)
 
         print("Job finished for model: ")
         print("\t", model_name)
