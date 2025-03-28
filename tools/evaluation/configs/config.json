@@ -7,11 +7,11 @@
   "root_dir": "D:/datasets/Warsaw/",
   "top_k": 0.10,
   "dataset" : {
-    "splitfile":"auto",
+    "splitfile":"splits/Warsaw_Random_130_PIXPRO_autumn_straighten_orto_20zl.csv",
     "districts": ["Ursynow"],
     "cameras": ["PIXPRO"],
     "seasons": ["autumn"],
-    "modification": "strighten",
+    "modification": "straighten",
     "crop": [0, 0],
     "angle": "orto",
     "zoom_level": 19
@@ -25,7 +25,6 @@
   },
   "charts" : {
     "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
-    "recall_chart": true,
     "matches_chart": true,
     "display_nearest": 3,
 

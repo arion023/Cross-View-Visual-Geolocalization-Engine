@@ -11,7 +11,7 @@
       "districts": ["Wilanow"],
       "cameras": ["PIXPRO"],
       "seasons": ["autumn"],
-      "modification": "strighten",
+      "modification": "straighten",
       "crop": [0, 0],
       "angle": "orto",
       "zoom_level": 19
@@ -20,12 +20,11 @@
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
       "accuracy" : {
         "save":true,
-        "filename": "tmp"
+        "filename": "districts"
       }
     },
     "charts" : {
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
-      "recall_chart": true,
       "matches_chart": true,
       "display_nearest": 4,
 
@@ -44,7 +43,7 @@
       "districts": ["Center"],
       "cameras": ["PIXPRO"],
       "seasons": ["autumn"],
-      "modification": "strighten",
+      "modification": "straighten",
       "crop": [0, 0],
       "angle": "orto",
       "zoom_level": 19
@@ -53,12 +52,11 @@
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
       "accuracy" : {
         "save":true,
-        "filename": "tmp"
+        "filename": "districts"
       }
     },
     "charts" : {
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
-      "recall_chart": true,
       "matches_chart": true,
       "display_nearest": 4,
 
@@ -77,7 +75,7 @@
       "districts": ["Ursynow"],
       "cameras": ["PIXPRO"],
       "seasons": ["autumn"],
-      "modification": "strighten",
+      "modification": "straighten",
       "crop": [0, 0],
       "angle": "orto",
       "zoom_level": 19
@@ -86,12 +84,11 @@
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
       "accuracy" : {
         "save":true,
-        "filename": "tmp"
+        "filename": "districts"
       }
     },
     "charts" : {
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
-      "recall_chart": true,
       "matches_chart": true,
       "display_nearest": 4,
 

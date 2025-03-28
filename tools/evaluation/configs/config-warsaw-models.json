@@ -1,0 +1,102 @@
+[
+{
+  "name": "auto",
+  "model": "CVM-NET-I",
+  "weights": "./../../../../references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+  "load_sat_descriptors": "path/to/satellite_images",
+  "save_sat_descriptors": "path/to/save_processed_satellite_images",
+  "load_pano_descriptors": "path/to/ground_images",
+  "save_pano_descriptor": "path/to/save_processed_ground_images",
+  "save_results": "./../../results/tmp_results.csv",
+  "save_chart": "./../../results/subsets/",
+  "recall_chart": true,
+  "compare_chart": true,
+  "root_dir": "D:/datasets/Warsaw/",
+  "crop": [600, 1000],
+  "splits": "splits/Wilanow-strighten-orto-21zl.csv",
+  "top_k": 0.1,
+  "display": 5,
+  "additional_info": {
+    "Weights": "Taken from the original paper (93% accuracy on reference model top1%)",
+    "Zoom level": "21 (In CVUSA zoom level = 19)",
+    "Subset": "Wilanow (30 places)",
+    "Season": "AUTUMN",
+    "Description": "\nImages where strighten manually.\nBlue color image frame marks correct sat image.\nAll images have been taken with the same camera PIXPRO."
+  }
+},
+{
+  "name": "CVM_NET_I_original_Wilanow_Theta_autumn_strighten_cropped_300_500_orto_21zl",
+  "model": "CVM-NET-I",
+  "weights": "./../../../../references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+  "load_sat_descriptors": "path/to/satellite_images",
+  "save_sat_descriptors": "path/to/save_processed_satellite_images",
+  "load_pano_descriptors": "path/to/ground_images",
+  "save_pano_descriptor": "path/to/save_processed_ground_images",
+  "save_results": "./../../results/tmp_results.csv",
+  "save_chart": "./../../results/subsets/",
+  "recall_chart": true,
+  "compare_chart": true,
+  "root_dir": "D:/datasets/Warsaw/",
+  "crop": [300, 500],
+  "splits": "splits/Wilanow-Theta-strighten-orto-21zl.csv",
+  "top_k": 0.1,
+  "display": 5,
+  "additional_info": {
+    "Weights": "Taken from the original paper (93% accuracy on reference model top1%)",
+    "Zoom level": "21 (In CVUSA zoom level = 19)",
+    "Subset": "Wilanow (30 places)",
+    "Season": "AUTUMN",
+    "Description": "\nImages where strighten manually.\nBlue color image frame marks correct sat image.\nAll images have been taken with the same camera PIXPRO."
+  }
+},
+{
+  "name": "CVM_NET_I_original_Center_autumn_strighten_cropped_600_1000_orto_21zl",
+  "model": "CVM-NET-I",
+  "weights": "./../../../../references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+  "load_sat_descriptors": "path/to/satellite_images",
+  "save_sat_descriptors": "path/to/save_processed_satellite_images",
+  "load_pano_descriptors": "path/to/ground_images",
+  "save_pano_descriptor": "path/to/save_processed_ground_images",
+  "save_results": "./../../results/tmp_results.csv",
+  "save_chart": "./../../results/subsets/",
+  "recall_chart": true,
+  "compare_chart": true,
+  "root_dir": "D:/datasets/Warsaw/",
+  "crop": [600, 1000],
+  "splits": "splits/Center-strighten-orto-21zl.csv",
+  "top_k": 0.1,
+  "display": 5,
+  "additional_info": {
+    "Weights": "Taken from the original paper (93% accuracy on reference model top1%)",
+    "Zoom level": "21 (In CVUSA zoom level = 19)",
+    "Subset": "Center (20 places)",
+    "Season": "AUTUMN",
+    "Description": "\nImages where strighten manually.\nBlue color image frame marks correct sat image.\nAll images have been taken with the same camera PIXPRO."
+  }
+},
+{
+  "name": "CVM_NET_I_original_Ursynow_autumn_strighten_cropped_600_1000_orto_21zl",
+  "model": "CVM-NET-I",
+  "weights": "./../../../../references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+  "load_sat_descriptors": "path/to/satellite_images",
+  "save_sat_descriptors": "path/to/save_processed_satellite_images",
+  "load_pano_descriptors": "path/to/ground_images",
+  "save_pano_descriptor": "path/to/save_processed_ground_images",
+  "save_results": "./../../results/tmp_results.csv",
+  "save_chart": "./../../results/subsets/",
+  "recall_chart": true,
+  "compare_chart": true,
+  "root_dir": "D:/datasets/Warsaw/",
+  "crop": [600, 1000],
+  "splits": "splits/Ursynow-strighten-orto-21zl.csv",
+  "top_k": 0.1,
+  "display": 5,
+  "additional_info": {
+    "Weights": "Taken from the original paper (93% accuracy on reference model top1%)",
+    "Zoom level": "21 (In CVUSA zoom level = 19)",
+    "Subset": "Ursynow (20 places)",
+    "Season": "AUTUMN",
+    "Description": "\nImages where straighten manually.\nBlue color image frame marks correct sat image.\nAll images have been taken with the same camera PIXPRO."
+  }
+}
+]
