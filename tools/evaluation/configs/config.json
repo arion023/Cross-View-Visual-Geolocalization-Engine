@@ -26,14 +26,10 @@
   "charts" : {
     "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
     "recall_chart": true,
-
     "matches_chart": true,
     "display_nearest": 3,
 
-    "additional_info": {
-      "weights": "Taken from the original paper (93% accuracy on reference model top1%)",
-      "description": ""
-    }
-  }
+    "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
+   }
 }
 ]
