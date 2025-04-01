@@ -6,6 +6,7 @@ import cv2
 class Dataset:
     def __init__(self, datset_config, input_data):
         self.root_dir = input_data.root_dir
+        self.generated_splitfile = False
         self.input_data = input_data
         self.__dict__.update(datset_config)
         print(self.__dict__)
@@ -46,12 +47,14 @@ class Dataset:
 
     def update_split(self):
         if self.splitfile == "auto":
+            self.generated_splitfile = True
             sfg = SplitFileGenerator(self, self.input_data.root_dir)
             self.splitfile = sfg.generate()
         else:
             print(
                 "Attributes for dataset in config file will be ignored since split file is provided."
             )
+
         self.split_path = self.input_data.root_dir + self.splitfile
 
     def next_batch_scan(self, batch_size):
@@ -120,6 +123,7 @@ class Dataset:
 
     def get_sat(self, idx):
         # 0 image is sat img path
+
         return self.id_dataset_list[idx][0]
 
     def get_pano(self, idx):

@@ -31,7 +31,7 @@ class InputDataEval:
 
     # crop is tuple (top_crop, bottom_crop), if there is no crop, there should be (None, None)
     def __init__(self, config_dict):
-
+        self.generated_name = False
         self.__dict__.update(config_dict)
         self.update()
 
@@ -43,6 +43,12 @@ class InputDataEval:
 
     def update_name(self):
         if self.name == "auto":
+            if not self.dataset.generated_splitfile:
+                raise ValueError(
+                    "Auto name generation is not possible without splitfile generation. Name must be custom in that way, because splifile is given also custom."
+                )
+
+            self.generated_name = True
             self.name = (
                 self.model
                 + "_"
