@@ -34,7 +34,7 @@ class SplitFileGenerator:
             if dist in self.districts_aliases:
                 tmp_districts += self.districts_aliases[dist]
             else:
-                tmp_districts += dist
+                tmp_districts.append(dist)
 
         for dist in tmp_districts:
             self.districts[dist] = self.districts_mapped[dist]
