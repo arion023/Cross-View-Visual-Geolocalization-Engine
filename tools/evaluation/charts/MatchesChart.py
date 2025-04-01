@@ -70,7 +70,7 @@ class MatchesChart:
 
         for i in [1, 5, 10, 20]:
             ax.annotate(
-                f"{accuracy[i]:.1f}%",
+                f"{accuracy[i]*100:.1f}%",
                 (x[i], accuracy[i]),
                 textcoords="offset points",
                 xytext=(0, 10),
@@ -141,7 +141,7 @@ class MatchesChart:
         return unique_min_idx
 
     def display_pano(self, ax, path):
-        img = self.display_image(ax, path)
+        img = self.display_image(ax, path, apply_crop=True)
 
         path_splited = path.split("/")
         # write the photo description
@@ -178,13 +178,13 @@ class MatchesChart:
 
         return img
 
-    def display_image(self, ax, path):
-        crop = self.input_data.dataset.crop
+    def display_image(self, ax, path, apply_crop=False):
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         # make cropped part of image darker
-        if crop is not None:
+        if apply_crop:
+            crop = self.input_data.dataset.crop
             bottom_crop = len(img[:, 0, 0]) - crop[1]
             img[0 : crop[0], :, :] //= 2
             img[bottom_crop:, :, :] //= 2
