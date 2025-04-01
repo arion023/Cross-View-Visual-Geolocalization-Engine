@@ -94,7 +94,7 @@ class MatchesChart:
             row = self.offset + pano_id
 
             if (pano_id + 1) % (number_of_panos // 10) == 0:
-                print(f"Generates comp. no. {pano_id+1} / {number_of_panos} ")
+                print(f"Generates comp. progress {pano_id+1} / {number_of_panos} ")
 
             # display panorama photo to match
             ax = plt.subplot2grid(grid, (row, 0))
