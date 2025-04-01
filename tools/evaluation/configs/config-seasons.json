@@ -32,7 +32,7 @@
      }
   },
   {
-    "name": "CVM-NET-I_original_Ursynow_PIXPRO_winter_strighten_600_1000_orto_20zl",
+    "name": "CVM-NET-I_original_Warsaw_PIXPRO_winter_strighten_600_1000_orto_20zl",
     "model": "CVM-NET-I",
     "weights_name": "original",
     "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
@@ -40,12 +40,12 @@
     "top_k": 0.10,
     "dataset" : {
       "splitfile":"splits/Warsaw_PIXPRO_winter_straighten_orto_20zl.csv",
-      "districts": ["-"],
-      "cameras": ["-"],
-      "seasons": ["-"],
-      "modification": "-",
-      "crop": [-1, -1],
-      "angle": "-",
+      "districts": ["Warsaw"],
+      "cameras": ["PIXPRO"],
+      "seasons": ["winter"],
+      "modification": "straighten",
+      "crop": [600, 1000],
+      "angle": "orto",
       "zoom_level": 0
     },
     "results" : {
