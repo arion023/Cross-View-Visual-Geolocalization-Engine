@@ -213,7 +213,7 @@ if __name__ == "__main__":
 
         if input_data.charts.matches_chart:
             print("   generate matches chart")
-            MatchesChart(input_data)
+            MatchesChart(input_data, display_real_distance=True)
 
         print("Job finished for model: ")
         print("\t", model_name)

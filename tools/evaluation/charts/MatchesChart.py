@@ -1,5 +1,7 @@
 import os
 
+import csv
+import math
 import cv2
 import numpy as np
 
@@ -8,14 +10,21 @@ import matplotlib.patches as patches
 
 
 class MatchesChart:
-    def __init__(self, input_data, display_nearest=None):
+    def __init__(self, input_data, display_nearest=None, display_real_distance=False):
         self.input_data = input_data
         self.results = self.input_data.results
-
+        self.display_real_distance = display_real_distance
         if display_nearest is None:
             self.display_nearest = input_data.charts.display_nearest
         else:
             self.display_nearest = display_nearest
+
+        self.locations = None
+        if display_real_distance:
+            with open(self.input_data.root_dir + "locations.csv", "r") as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                self.locations = {row[0].zfill(3): (row[1], row[2]) for row in reader}
 
         directory_path = self.input_data.charts.path + self.input_data.name
         try:
@@ -53,9 +62,9 @@ class MatchesChart:
 
         rows = number_of_panos + offset
 
-        fig = plt.figure(figsize=(min(20, 2 * cols), max(200, 2 * rows)))
+        fig = plt.figure(figsize=(min(20, 2 * cols), 2 * rows))
 
-        fig.subplots_adjust(top=0.94, wspace=0.05, hspace=0.3)
+        fig.subplots_adjust(top=0.94, wspace=0.15, hspace=0.25)
 
         return fig, rows, cols, offset
 
@@ -94,13 +103,13 @@ class MatchesChart:
             row = self.offset + pano_id
 
             if (pano_id + 1) % (number_of_panos // 10) == 0:
-                print(f"Generates comp. progress {pano_id+1} / {number_of_panos} ")
+                print(f"Generates matches... progress {pano_id+1} / {number_of_panos} ")
 
             # display panorama photo to match
             ax = plt.subplot2grid(grid, (row, 0))
 
-            img_path = dataset.get_pano(pano_id)
-            self.display_pano(ax, root_dir + img_path)
+            pano_img_path = dataset.get_pano(pano_id)
+            self.display_pano(ax, root_dir + pano_img_path)
 
             matched_sat_path = dataset.get_sat(pano_id)
             nearest_sat_indexes = self.get_nearest_sat_idx_list(pano_id)
@@ -113,11 +122,22 @@ class MatchesChart:
                 next_nearest_sat_idx = nearest_sat_indexes[col - 1]
                 img_path = dataset.get_sat(next_nearest_sat_idx)
 
+                color = "red"
+                if img_path == matched_sat_path:
+                    color = "blue"
+
+                real_distance = None
+                if self.display_real_distance:
+                    real_distance = self.calculate_real_distance(
+                        pano_img_path, img_path
+                    )
+
                 self.display_match(
                     ax,
                     root_dir + img_path,
                     distance=dist_array[next_nearest_sat_idx, pano_id],
-                    if_correct=True if img_path == matched_sat_path else False,
+                    real_distance=real_distance,
+                    color=color,
                 )
 
             ax = plt.subplot2grid(grid, (row, cols - 1))
@@ -126,7 +146,7 @@ class MatchesChart:
                 ax,
                 root_dir + matched_sat_path,
                 distance=dist_array[pano_id, pano_id],
-                if_correct=True,
+                real_distance=0,
                 color="yellow",
             )
 
@@ -150,29 +170,29 @@ class MatchesChart:
 
         return img
 
-    def display_match(self, ax, path, distance, if_correct, color="blue"):
+    def display_match(self, ax, path, distance, real_distance=None, color="blue"):
         img = self.display_image(ax, path)
         path_splited = path.split("/")
-        ax.set_xlabel(f"{path_splited[-1]}\nDistance: {distance:.4f}", fontsize=8)
+
+        label = f"{path_splited[-1]}\nDistance: {distance:.4f}"
+        ax.set_xlabel(
+            label,
+            fontsize=8,
+        )
+        if self.display_real_distance:
+            ax.set_ylabel(
+                f"Real distance: {real_distance:.2f} km",
+                fontsize=8,
+            )
 
         rect = patches.Rectangle(
             (0, 0),
             img.shape[1],
             img.shape[0],
-            linewidth=3,
-            edgecolor="red",
+            linewidth=4,
+            edgecolor=color,
             facecolor="none",
         )
-
-        if if_correct:
-            rect = patches.Rectangle(
-                (0, 0),
-                img.shape[1],
-                img.shape[0],
-                linewidth=4,
-                edgecolor=color,
-                facecolor="none",
-            )
 
         ax.add_patch(rect)
 
@@ -198,6 +218,28 @@ class MatchesChart:
         ax.spines["bottom"].set_visible(False)  # Turn off bottom spine
 
         return img
+
+    def calculate_real_distance(self, pano_path, sat_path):
+        pano_id = pano_path.split("/")[-1].split("_")[0]
+        sat_id = sat_path.split("/")[-1].split(".")[0]
+
+        if self.locations is None:
+            raise ValueError("Locations are not loaded.")
+
+        if pano_id not in self.locations or sat_id not in self.locations:
+            raise ValueError("Location is not in the locations list.")
+
+        (lat1, lon1) = self.locations[pano_id]
+        (lat2, lon2) = self.locations[sat_id]
+
+        lat1 = float(lat1)
+        lon1 = float(lon1)
+        lat2 = float(lat2)
+        lon2 = float(lon2)
+
+        x = (lon2 - lon1) * math.cos((lat1 + lat2) / 2 * math.pi / 180)
+        y = lat2 - lat1
+        return math.sqrt(x**2 + y**2) * 111.32
 
     # TODO add custom description
     def add_description(self):
