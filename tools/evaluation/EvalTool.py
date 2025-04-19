@@ -33,14 +33,14 @@ def calculate_accuracy(dist_array, input_data):
     topk_percent = input_data.top_k
     unique_sat_idx_list = input_data.dataset.get_unique_sat_idx_list()
     number_of_unique_sat = len(unique_sat_idx_list)
-    photos_number_list = topk_percent_to_numbers(number_of_unique_sat)
+    images_number_list = topk_percent_to_numbers(number_of_unique_sat)
     topk_given = math.ceil(number_of_unique_sat * topk_percent)
 
-    accuracy_by_percents = np.array([0.0 for _ in photos_number_list])
+    accuracy_by_percents = np.array([0.0 for _ in images_number_list])
     accuracy_by_top100 = np.array([0.0 for _ in range(100)])
     data_amount = 0.0
 
-    # print("Correct match if it is in top", photos_number_list, "photos.")
+    # print("Correct match if it is in top", images_number_list, "images.")
 
     for j in range(dist_array.shape[1]):
         gt_dist = dist_array[j, j]
@@ -50,9 +50,9 @@ def calculate_accuracy(dist_array, input_data):
             if dist_array[i, j] < gt_dist:
                 false_prediction += 1
 
-        for idx, photos_number in enumerate(photos_number_list):
-            if false_prediction < photos_number:
-                if photos_number == topk_given:
+        for idx, images_number in enumerate(images_number_list):
+            if false_prediction < images_number:
+                if images_number == topk_given:
                     print("Correct match for pano with id:\t", j)
                 accuracy_by_percents[idx] += 1.0
 

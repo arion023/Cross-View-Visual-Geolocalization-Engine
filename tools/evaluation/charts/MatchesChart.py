@@ -113,7 +113,7 @@ class MatchesChart:
 
             matched_sat_path = dataset.get_sat(pano_id)
             nearest_sat_indexes = self.get_nearest_sat_idx_list(pano_id)
-
+            nearest_sat_indexes_paths =  list(map(dataset.get_sat, nearest_sat_indexes))
             # display n next matches
             # 0 image in row already is pano, and it is done already, so start from second
             # last column is sat image with correct match
@@ -148,6 +148,7 @@ class MatchesChart:
                 distance=dist_array[pano_id, pano_id],
                 real_distance=0,
                 color="yellow",
+                custom_text=f'; no. {nearest_sat_indexes_paths.index(matched_sat_path)}'
             )
 
     def get_nearest_sat_idx_list(self, pano_id):
@@ -170,11 +171,11 @@ class MatchesChart:
 
         return img
 
-    def display_match(self, ax, path, distance, real_distance=None, color="blue"):
+    def display_match(self, ax, path, distance, real_distance=None, color="blue", custom_text=""):
         img = self.display_image(ax, path)
         path_splited = path.split("/")
 
-        label = f"{path_splited[-1]}\nDistance: {distance:.4f}"
+        label = f"{path_splited[-1]}\nDistance: {distance:.4f}" + custom_text
         ax.set_xlabel(
             label,
             fontsize=8,
