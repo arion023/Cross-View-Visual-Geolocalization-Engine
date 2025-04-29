@@ -15,7 +15,7 @@ def cvm_net_I(x_sat, x_grd, keep_prob, trainable):
         with tf.variable_scope('netvlad_grd'):
             netvlad_grd = lp.NetVLAD(feature_size=512, max_samples=tf.shape(grd_local)[1] * tf.shape(grd_local)[2],
                                      cluster_size=64, output_dim=4096, gating=True, add_batch_norm=False,
-                                     is_training=trainable)
+                                     is_training=True)
             grd_vlad = netvlad_grd.forward(grd_local)
 
         vgg_sat = VGG16()
@@ -23,7 +23,7 @@ def cvm_net_I(x_sat, x_grd, keep_prob, trainable):
         with tf.variable_scope('netvlad_sat'):
             netvlad_sat = lp.NetVLAD(feature_size=512, max_samples=tf.shape(sat_local)[1] * tf.shape(sat_local)[2],
                                      cluster_size=64, output_dim=4096, gating=True, add_batch_norm=False,
-                                     is_training=trainable)
+                                     is_training=True)
             sat_vlad = netvlad_sat.forward(sat_local)
 
     with tf.device('/gpu:0'):

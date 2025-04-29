@@ -14,8 +14,8 @@ class InputData:
         elif self.dataset=="WAW":
             self.img_root = "D:/datasets/Warsaw/"
 
-        self.train_list = self.img_root + 'splits/train-19zl.csv'
-        self.test_list = self.img_root + 'splits/val-19zl.csv'
+        self.train_list = self.img_root + 'splits/sets/mix/train.csv'
+        self.test_list = self.img_root + 'splits/sets/mix/eval.csv'
 
         print('InputData::__init__: load %s' % self.train_list)
         self.__cur_id = 0  # for training
@@ -44,6 +44,7 @@ class InputData:
                 data = line.split(',')
                 pano_id = (data[0].split('/')[-1]).split('.')[0]
                 # satellite filename, streetview filename, pano_id
+                # print(data[0], data[1], pano_id)
                 self.id_test_list.append([data[0], data[1], pano_id])
                 self.id_test_idx_list.append(idx)
                 idx += 1
@@ -67,7 +68,7 @@ class InputData:
 
             # satellite
             img = cv2.imread(self.img_root + self.id_test_list[img_idx][0])
-            img = cv2.resize(img, (512, 512), interpolation=cv2.INTER_AREA)
+            # img = cv2.resize(img, (512, 512), interpolation=cv2.INTER_AREA)
 
             img = img.astype(np.float32)
             # img -= 100.0
@@ -80,7 +81,7 @@ class InputData:
             img = cv2.imread(self.img_root + self.id_test_list[img_idx][1])
 
             if self.dataset=="WAW":
-                img = img[ : , 400:-400 ]
+                img = img[800:-1000, :, :]
                 img = cv2.resize(img, (1232, 224), interpolation=cv2.INTER_AREA)
 
             img = img.astype(np.float32)
@@ -121,10 +122,11 @@ class InputData:
             if img is None or img.shape[0] != img.shape[1]:
                 print('InputData::next_pair_batch: read fail: %s, %d, ' % (self.img_root + self.id_list[img_idx][0], i), img.shape)
                 continue
-            rand_crop = random.randint(1, 748)
-            if rand_crop > 512:
-                start = int((750 - rand_crop) / 2)
-                img = img[start : start + rand_crop, start : start + rand_crop, :]
+            #TODO add this in that configuration
+            # rand_crop = random.randint(1, 748)
+            # if rand_crop > 512:
+            #     start = int((750 - rand_crop) / 2)
+            #     img = img[start : start + rand_crop, start : start + rand_crop, :]
             img = cv2.resize(img, (512, 512), interpolation=cv2.INTER_AREA)
             rand_rotate = random.randint(0, 4) * 90
             rot_matrix = cv2.getRotationMatrix2D((256, 256), rand_rotate, 1)
@@ -137,6 +139,12 @@ class InputData:
             batch_sat[batch_idx, :, :, :] = img
             # ground
             img = cv2.imread(self.img_root + self.id_list[img_idx][1])
+            if self.dataset=="WAW":
+                top_crop = random.randint(700, 900)
+                bottom_crop = random.randint(800, 1100)
+                img = img[top_crop:-bottom_crop, :, :]
+                img = cv2.resize(img, (1232, 224), interpolation=cv2.INTER_AREA)
+
             if img is None or img.shape[0] != 224 or img.shape[1] != 1232:
                 print('InputData::next_pair_batch: read fail: %s, %d, ' % (self.img_root + self.id_list[img_idx][1], i), img.shape)
                 continue

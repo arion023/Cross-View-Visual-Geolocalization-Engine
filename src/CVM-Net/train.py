@@ -11,11 +11,13 @@ tf.disable_v2_behavior()
 # --------------  configuration parameters  -------------- #
 # the type of network to be used: "CVM-NET-I" or "CVM-NET-II"
 network_type = 'CVM-NET-I'
+MODEL_NAME = network_type + '_mix_finetuning_netvlad'
+
 
 batch_size = 12
-is_training = True
+is_training = True # only NetVLAD is trained, the rest of the network is fixed
 loss_weight = 10.0
-number_of_epoch = 10
+number_of_epoch = 2
 
 learning_rate_val = 1e-5
 keep_prob_val = 0.8
@@ -87,7 +89,7 @@ def train(start_epoch=1):
     '''
 
     # import data
-    input_data = InputData()
+    input_data = InputData(dataset="WAW")
 
 
     # define placeholders
@@ -99,9 +101,9 @@ def train(start_epoch=1):
 
     # build model
     if network_type == 'CVM-NET-I':
-        sat_global, grd_global = cvm_net_I(sat_x, grd_x, keep_prob, is_training)
+        sat_global, grd_global = cvm_net_I(sat_x, grd_x, keep_prob, trainable=False)
     elif network_type == 'CVM-NET-II':
-        sat_global, grd_global = cvm_net_II(sat_x, grd_x, keep_prob, is_training)
+        sat_global, grd_global = cvm_net_II(sat_x, grd_x, keep_prob, trainable=False)
     else:
         print ('CONFIG ERROR: wrong network type, only CVM-NET-I and CVM-NET-II are valid')
 
@@ -128,35 +130,70 @@ def train(start_epoch=1):
         sess.run(tf.global_variables_initializer())
 
         print('load model...')
-        load_model_path = '../Model/' + network_type + '/' + str(start_epoch - 1) + '/model.ckpt'
+        load_model_path = '../Model/CVM-Net-I/CVM-Net-I_model/model.ckpt'
         saver.restore(sess, load_model_path)
         print("   Model loaded from: %s" % load_model_path)
         print('load model...FINISHED')
 
+        # print(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='netvlad_sat'))
+        # print(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES))
+
         # Train
-        for epoch in range(start_epoch, start_epoch + number_of_epoch):
-            iter = 0
-            while True:
-                # train
-                batch_sat, batch_grd = input_data.next_pair_batch(batch_size)
-                if batch_sat is None:
-                    break
+        if is_training:
+            for epoch in range(start_epoch, start_epoch + number_of_epoch):
+                iter = 0
+                while True:
+                    # train
+                    batch_sat, batch_grd = input_data.next_pair_batch(batch_size)
+                    if batch_sat is None:
+                        break
 
-                global_step_val = tf.train.global_step(sess, global_step)
+                    global_step_val = tf.train.global_step(sess, global_step)
 
-                feed_dict = {sat_x: batch_sat, grd_x: batch_grd,
-                             learning_rate: learning_rate_val, keep_prob: keep_prob_val}
-                if iter % 20 == 0:
-                    _, loss_val = sess.run([train_step, loss], feed_dict=feed_dict)
-                    print('global %d, epoch %d, iter %d: loss : %.4f' %
-                          (global_step_val, epoch, iter, loss_val))
-                else:
-                    sess.run(train_step, feed_dict=feed_dict)
+                    feed_dict = {sat_x: batch_sat, grd_x: batch_grd,
+                                learning_rate: learning_rate_val, keep_prob: keep_prob_val}
+                    if iter % 20 == 0:
+                        _, loss_val = sess.run([train_step, loss], feed_dict=feed_dict)
+                        print('global %d, epoch %d, iter %d: loss : %.4f' %
+                            (global_step_val, epoch, iter, loss_val))
+                    else:
+                        sess.run(train_step, feed_dict=feed_dict)
 
-                iter += 1
+                    iter += 1
 
-            # ---------------------- validation ----------------------
-            print('validate...')
+                # ---------------------- validation ----------------------
+                print('validate...')
+                print('   compute global descriptors')
+                input_data.reset_scan()
+                sat_global_descriptor = np.zeros([input_data.get_test_dataset_size(), 4096])
+                grd_global_descriptor = np.zeros([input_data.get_test_dataset_size(), 4096])
+                val_i = 0
+                while True:
+                    print('      progress %d' % val_i)
+                    batch_sat, batch_grd = input_data.next_batch_scan(batch_size)
+                    if batch_sat is None:
+                        break
+                    feed_dict = {sat_x: batch_sat, grd_x: batch_grd, keep_prob: 1.0}
+                    sat_global_val, grd_global_val = \
+                        sess.run([sat_global, grd_global], feed_dict=feed_dict)
+
+                    sat_global_descriptor[val_i: val_i + sat_global_val.shape[0], :] = sat_global_val
+                    grd_global_descriptor[val_i: val_i + grd_global_val.shape[0], :] = grd_global_val
+                    val_i += sat_global_val.shape[0]
+
+                print('   compute accuracy')
+                val_accuracy = validate(grd_global_descriptor, sat_global_descriptor)
+                with open('../Result/' + str(network_type) + '_' + MODEL_NAME +'_accuracy.txt', 'a') as file:
+                    file.write('epoch: ' + str(epoch) + ' = ' + str(val_accuracy) + '\n')
+                print('   %d: accuracy = %.1f%%' % (epoch, val_accuracy*100.0))
+                model_dir = '../Model/' + MODEL_NAME +'/' + str(epoch) + '/'
+                if not os.path.exists(model_dir):
+                    os.makedirs(model_dir)
+                save_path = saver.save(sess, model_dir + 'model.ckpt')
+                print("Model saved in file: %s" % save_path)
+        # ---------------------------------------------------------
+        else:
+            print('validate model...')
             print('   compute global descriptors')
             input_data.reset_scan()
             sat_global_descriptor = np.zeros([input_data.get_test_dataset_size(), 4096])
@@ -177,18 +214,27 @@ def train(start_epoch=1):
 
             print('   compute accuracy')
             val_accuracy = validate(grd_global_descriptor, sat_global_descriptor)
-            with open('../Result/' + str(network_type) + '_accuracy.txt', 'a') as file:
-                file.write(str(epoch) + ' ' + str(iter) + ' : ' + str(val_accuracy) + '\n')
-            print('   %d: accuracy = %.1f%%' % (epoch, val_accuracy*100.0))
+            with open('../Result/' + MODEL_NAME + '_accuracy.txt', 'a') as file:
+                file.write('overall score : ' + str(val_accuracy) + '\n')
+            print('   completed: accuracy = %.1f%%' % ( val_accuracy*100.0))
 
-            model_dir = '../Model/' + network_type + '/' + str(epoch) + '/'
-            if not os.path.exists(model_dir):
-                os.makedirs(model_dir)
-            save_path = saver.save(sess, model_dir + 'model.ckpt')
-            print("Model saved in file: %s" % save_path)
-            # ---------------------------------------------------------
+
+
 
 
 
 if __name__ == '__main__':
+
+    # PART OF TEST CODE
+    # og = tf.train.load_variable('./../Model/CVM-Net-I/CVM-Net-I_model/model.ckpt', 'VGG_grd/conv1_1/weights')
+    # # og = tf.train.load_variable('./../Model/CVM-Net-I/CVM-Net-I_model/model.ckpt', 'netvlad_sat/cluster_weights/Adam_1')
+    # # print(weights)
+
+    # # modified = tf.train.load_variable('./../Model/finetuning_netvlad/2/model.ckpt', 'netvlad_sat/cluster_weights/Adam_1')
+    # # modified = tf.train.load_variable('./../Model/CVM-Net-I/CVM-Net-I_model/model.ckpt', 'netvlad_sat/cluster_weights/Adam_1')
+    # modified = tf.train.load_variable('./../Model/CVM-Net-I/CVM-Net-I_model/model.ckpt', 'VGG_grd/conv1_1/weights')
+    # print("weights are equal?")
+    # print((og==modified).all())
+
+
     train()
