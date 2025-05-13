@@ -40,7 +40,7 @@ def generate_occlueded_panos(pano_img, dir_path, pano_id):
             # Create a copy of the original image
             occluded_pano = np.copy(pano_img)
 
-            # Set the tile area to black
+
             occluded_pano[y:y + TILE_SIZE[0], x:x + TILE_SIZE[1]] = 0
 
             # Save the occluded panorama
@@ -53,9 +53,10 @@ def generate_occlueded_panos(pano_img, dir_path, pano_id):
 
     with open(ROOT_DIR + dir_path + f"split_occluded_{pano_id}_{int(grid_size[0])}x{int(grid_size[1])}.csv", "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow([SAT_PATH, dir_path + pano_id + "_black.jpg","empty"]) #XD
+        writer.writerow([SAT_PATH, dir_path + pano_id + ".jpg","empty"])
+        writer.writerow([SAT_PATH, dir_path + pano_id + "_black.jpg","empty"])
         for pano_path in pano_paths:
-            writer.writerow([SAT_PATH,  pano_path,"empty"]) #XD
+            writer.writerow([SAT_PATH,  pano_path,"empty"])
 
 
 
@@ -70,6 +71,7 @@ def main():
         dir_path = "/".join(splited_pano_path[:-1]) + "/occluded/"
 
     pano_img = cv2.imread(PANO_PATH)
+
     shape = pano_img.shape
     grid_size = ( shape[0] / TILE_SIZE[0], shape[1] / TILE_SIZE[1])
 
@@ -78,6 +80,8 @@ def main():
         os.makedirs(ROOT_DIR + dir_path)
         print(f"Created directory: {ROOT_DIR + dir_path}")
 
+    #write image to the directory
+    cv2.imwrite(ROOT_DIR + dir_path + pano_filename, pano_img)
     generate_black_image(shape, dir_path, pano_id)
     generate_occlueded_panos(pano_img, dir_path, pano_id)
 
