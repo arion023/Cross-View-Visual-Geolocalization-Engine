@@ -7,8 +7,18 @@ import numpy as np
 
 
 ZOOM = 19
+# DISTANCE_PATH = "./results/distances/CVM-NET-I_original_Warsaw_Tile_19_PIXPRO_autumn_straighten_crop_600_1000_orto_19zl.csv"
+DISTANCE_PATH = "./results/distances/CVM-NET-I_original_Warsaw_Tile_19_PIXPRO_autumn_straighten_crop_600_1000_orto_19zl.csv"
+
 root_dir = "D:\datasets\Warsaw"
 tileurl = "https://ukosne.um.warszawa.pl/Data/2022/{z}/{x}/{y}.jpg"
+
+m = folium.Map(
+    (52.22983601573939, 21.011703206081123),
+    zoom_start=15,
+    tiles=tileurl,
+    attr="Warszawa-ukosna",
+)
 
 
 tileArcGIS = folium.TileLayer(
@@ -17,14 +27,8 @@ tileArcGIS = folium.TileLayer(
     name="Esri Satellite",
     overlay=False,
     control=True,
-)
+).add_to(m)
 
-m = folium.Map(
-    (52.22983601573939, 21.011703206081123),
-    zoom_start=15,
-    tiles=tileurl,
-    attr="Warszawa-ukosna",
-)
 
 area = gpd.read_file("./tools/geojson/warszawa-dzielnice.geojson").to_crs(
     "EPSG:4326"
@@ -44,7 +48,7 @@ maxx = tiles[-1].x
 maxy = tiles[-1].y
 
 # tiles_values = pd.read_csv(f"./../results/distances/CVM-NET-I_original_Warsaw_Tile_19_PIXPRO_autumn_straighten_crop_600_1000_orto_19zl")
-tiles_values = pd.read_csv(f"./results/distances/CVM-NET-I_original_Warsaw_Tile_19_PIXPRO_autumn_straighten_crop_600_1000_orto_19zl.csv", index_col="pano\\sat")
+tiles_values = pd.read_csv(DISTANCE_PATH, index_col="pano\\sat")
 tiles_values =  tiles_values.transpose()
 tile_ids = []
 
@@ -95,13 +99,14 @@ for i, pano in enumerate(panos_ids):
     pano_short = pano.split("/")[-1]
     print("Starting pano: ", pano_short)
 
-    locations = pd.read_csv(root_dir + "/locations.csv", index_col=0)
+    locations = pd.read_csv(root_dir + "/locations/all.csv", index_col=0)
     gradient_img = np.zeros(dtype=np.float64, shape=(y_shape, x_shape))
+    loc_probability = np.ones(dtype=np.float64, shape=(y_shape, x_shape))
 
     np.clip(gradient_distances[:,:,i], 0, 1, out=gradient_img)
+    loc_probability = loc_probability - gradient_distances
     # gradient_img = gradient_img**2
     # print(gradient_img)
-
     id = int(pano_short.split("_")[0])
 
     if prev_id != id:
@@ -127,4 +132,4 @@ for i, pano in enumerate(panos_ids):
 folium.LayerControl().add_to(m)
 
 
-m.save("heatmap.html")
+m.save("results/heatmap.html")
