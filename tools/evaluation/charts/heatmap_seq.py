@@ -7,7 +7,7 @@ import numpy as np
 import cv2
 
 ZOOM = 19
-SEQUENCE_N = 1
+SEQUENCE_N = 5
 # DISTANCE_PATH = "./results/distances/CVM-NET-I_original_Warsaw_Tile_19_PIXPRO_autumn_straighten_crop_600_1000_orto_19zl.csv"
 DISTANCE_PATH = "results/distances/CVM-NET-I_original_Sequences_Warsaw_512px_PIXPRO_spring_raw_crop_800_1000_orto_19zl.csv"
 # panos/spring/Wilanow/PIXPRO/raw/
@@ -33,6 +33,11 @@ tileArcGIS = folium.TileLayer(
     show=False
 ).add_to(m)
 
+tileCartodb = folium.TileLayer(
+    tiles="cartodb positron",
+    overlay=False,
+    show=False
+).add_to(m)
 
 area = gpd.read_file("./tools/geojson/warszawa-dzielnice.geojson").to_crs(
     "EPSG:4326"
@@ -164,7 +169,7 @@ for i, pano_id in enumerate(pano_ids):
         name=pano_id,
         bounds=[[minlat, minlon], [maxlat, maxlon]],
         opacity=0.9,
-        colormap = lambda x: (1, 1, 0, x) if x > 0.9 else (0, 0, x, x),
+        colormap = lambda x: (0, 0, x, x),
         show=False
     ).add_to(m)
 
