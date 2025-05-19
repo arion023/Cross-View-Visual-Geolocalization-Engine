@@ -18,7 +18,7 @@ tileurl = "https://ukosne.um.warszawa.pl/Data/2022/{z}/{x}/{y}.jpg"
 
 m = folium.Map(
     (52.22983601573939, 21.011703206081123),
-    zoom_start=15,
+    zoom_start=13,
     tiles=tileurl,
     attr="Warszawa-ukosna",
 )
@@ -106,7 +106,7 @@ y_shape = maxy - miny
 
 distances = np.ones(dtype=np.float64, shape=(y_shape, x_shape, len(pano_ids)))
 probability = np.ones(dtype=np.float64, shape=(y_shape, x_shape, len(pano_ids)))
-seq_probability = np.zeros(dtype=np.float64, shape=(y_shape, x_shape, len(pano_ids)))
+seq_probability = np.ones(dtype=np.float64, shape=(y_shape, x_shape, len(pano_ids)))
 sat_list = tiles_values.columns.to_list()
 
 # idx = tiles_values.index.to_list().index(pano_paths[0])
@@ -127,9 +127,24 @@ for i, pano_path in enumerate(pano_paths):
 
 np.clip(distances, 0, 1, out=distances)
 probability = probability - distances
-seq_probability[:,:,0] = probability[:,:,0]
+seq_probability[:,:,0] *= probability[:,:,0]
+seq_probability[:,:,0] += 0.1
 
-kernel = np.ones((3, 3), np.float32)/9
+
+print("KERNEL")
+
+# kernel = np.ones((5, 5), np.float32)/25
+
+#Generating gaussian kernel
+size = 5
+sigma = 1
+
+# Generate 1D Gaussian kernel
+gk = cv2.getGaussianKernel(ksize=size, sigma=sigma)
+
+# Convert to 2D kernel
+kernel = gk @ gk.T
+print(kernel)
 
 # kernel = np.array([
 #     [-1, -2, -1],
@@ -137,10 +152,13 @@ kernel = np.ones((3, 3), np.float32)/9
 #     [ 1,  2,  1]
 # ], dtype=np.float32)
 
+alfa = 0.9
+beta = 0.1
+
 for i in range(1, len(pano_paths)):
-    seq_probability[:,:,i] = seq_probability[:,:, i-1]
-    seq_probability[:,:,i] = cv2.filter2D(seq_probability[:,:,i], ddepth=-1, kernel=kernel)
-    seq_probability[:,:,i] *= probability[:,:,i]
+    seq_probability[:,:,i] = probability[:,:,i] * cv2.filter2D(seq_probability[:,:,i-1], ddepth=-1, kernel=kernel) * alfa + beta * seq_probability[:,:,i-1]
+
+
 
 
 # PANO = "panos/autumn/Ursynow/PIXPRO/straighten/062_1.JPG"
@@ -149,6 +167,32 @@ prev_id = 0
 
 sequence_group = folium.FeatureGroup(name=f"LINE S{SEQUENCE_N}").add_to(m)
 folium.PolyLine(pano_coords, color="orange", weight=4, opacity=1).add_to(sequence_group)
+
+# image = seq_probability[:, :, -1]
+
+
+# flat_indices = np.argpartition(image.flatten(), -10)[-10:]
+# top_indices = flat_indices[np.argsort(-image.flatten()[flat_indices])]
+
+# top_coords = [np.unravel_index(idx, image.shape) for idx in top_indices]
+# top_values = image[np.array([r for r, c in top_coords]), np.array([c for r, c in top_coords])]
+
+# top_10 = list(zip(top_values, top_coords))
+
+
+
+# last_seq_best = folium.FeatureGroup(name=f"BEST IN OVERALL").add_to(m)
+# for value, coords in top_10:
+#     tile = mercantile.Tile(x=minx + coords[1], y=miny+coords[0], z=ZOOM-1)
+#     lnglat = mercantile.ul(tile)
+#     folium.Marker(
+#     location=[lnglat.lat, lnglat.lng],
+#     tooltip=f"Probablity: {value}",
+#     icon=folium.Icon(color="orange"),
+#     ).add_to(last_seq_best)
+
+
+# np.savetxt(f"results/last_seq_S{SEQUENCE_N}.txt", seq_probability[:,:,-1], fmt="%.6f")
 
 for i, pano_id in enumerate(pano_ids):
     print("Starting pano: ", pano_id)
@@ -160,16 +204,29 @@ for i, pano_id in enumerate(pano_ids):
 
     folium.Marker(
     location=[pano_coords[i][0], pano_coords[i][1]],
-    tooltip="ID "+str(id),
+    tooltip=f"ID {pano_id} ({i})",
     icon=folium.Icon(icon="camera", color="red"),
     ).add_to(sequence_group)
 
     folium.raster_layers.ImageOverlay(
         image=seq_probability[:,:,i],
-        name=pano_id,
+        name=f"SEQUENCE {i} ({pano_id})",
         bounds=[[minlat, minlon], [maxlat, maxlon]],
         opacity=0.9,
         colormap = lambda x: (0, 0, x, x),
+        show=False
+    ).add_to(m)
+
+#add solo places
+for i, pano_id in enumerate(pano_ids):
+    print("Starting pano: ", pano_id)
+
+    folium.raster_layers.ImageOverlay(
+        image=probability[:,:,i],
+        name="SOLO "+ pano_id,
+        bounds=[[minlat, minlon], [maxlat, maxlon]],
+        opacity=0.9,
+        colormap = lambda x: (0.5, 0.5, x, x),
         show=False
     ).add_to(m)
 
