@@ -3,3 +3,4 @@ __pycache__
 /tools/resources/geojson
 /tools/resources/configs/config-tmp.json
 /tools/scrapers/geckodriver.exe
+/tools/test.py
