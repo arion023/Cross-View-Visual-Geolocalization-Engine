@@ -14,14 +14,14 @@ BATCH_SIZE = 100
 N = 0
 
 # scrap next SCRAP_BATCHES batches
-SCRAP_BATCHES = 14
+SCRAP_BATCHES = 10
 
 BASE_DIR = "D:/datasets/Warsaw/sat/waw/2022/all-256/"
 
-ZOOM_LEVEL = 20
+ZOOM_LEVEL = 18
 BASE_URL = f"https://ukosne.um.warszawa.pl/Data/2022/{ZOOM_LEVEL}/"
 
-GEOJSON = "warszawa.geojson"
+GEOJSON = "geojson/warszawa.geojson"
 
 if __name__ == "__main__":
 
@@ -95,10 +95,10 @@ if __name__ == "__main__":
                         print("Error occured!!!")
                         print(response.status_code)
                     counter += 1
-                    if counter % 100 == 0:
-                        print(
-                            f"\tDownloaded {counter} images, success (200): {success_counter}, error (404): {error_counter}"
-                        )
+                    # if counter % 100 == 0:
+                    #     print(
+                    #         f"\tDownloaded {counter} images, success (200): {success_counter}, error (404): {error_counter}"
+                    #     )
                     time.sleep(0.01)
                 print(
                     f"Number of correct images in the column: {success_counter} / {success_counter + error_counter}"
