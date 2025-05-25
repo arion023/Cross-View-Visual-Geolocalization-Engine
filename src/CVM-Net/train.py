@@ -11,13 +11,13 @@ tf.disable_v2_behavior()
 # --------------  configuration parameters  -------------- #
 # the type of network to be used: "CVM-NET-I" or "CVM-NET-II"
 network_type = 'CVM-NET-I'
-MODEL_NAME = network_type + '_mix_finetuning_netvlad'
+MODEL_NAME = network_type + '_districts_v2_finetuning_all'
 
 
 batch_size = 12
-is_training = True # only NetVLAD is trained, the rest of the network is fixed
+is_training = True
 loss_weight = 10.0
-number_of_epoch = 2
+number_of_epoch = 4
 
 learning_rate_val = 1e-5
 keep_prob_val = 0.8
@@ -101,9 +101,9 @@ def train(start_epoch=1):
 
     # build model
     if network_type == 'CVM-NET-I':
-        sat_global, grd_global = cvm_net_I(sat_x, grd_x, keep_prob, trainable=False)
+        sat_global, grd_global = cvm_net_I(sat_x, grd_x, keep_prob, trainable=is_training)
     elif network_type == 'CVM-NET-II':
-        sat_global, grd_global = cvm_net_II(sat_x, grd_x, keep_prob, trainable=False)
+        sat_global, grd_global = cvm_net_II(sat_x, grd_x, keep_prob, trainable=is_training)
     else:
         print ('CONFIG ERROR: wrong network type, only CVM-NET-I and CVM-NET-II are valid')
 
@@ -131,12 +131,38 @@ def train(start_epoch=1):
 
         print('load model...')
         load_model_path = '../Model/CVM-Net-I/CVM-Net-I_model/model.ckpt'
+        # load_model_path = '../Model/CVM-Net-I_mix_finetuning_all/2/model.ckpt'
         saver.restore(sess, load_model_path)
         print("   Model loaded from: %s" % load_model_path)
         print('load model...FINISHED')
 
         # print(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='netvlad_sat'))
         # print(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES))
+
+        print('validate model...')
+        print('   compute global descriptors')
+        input_data.reset_scan()
+        sat_global_descriptor = np.zeros([input_data.get_test_dataset_size(), 4096])
+        grd_global_descriptor = np.zeros([input_data.get_test_dataset_size(), 4096])
+        val_i = 0
+        while True:
+            print('      progress %d' % val_i)
+            batch_sat, batch_grd = input_data.next_batch_scan(batch_size)
+            if batch_sat is None:
+                break
+            feed_dict = {sat_x: batch_sat, grd_x: batch_grd, keep_prob: 1.0}
+            sat_global_val, grd_global_val = \
+                sess.run([sat_global, grd_global], feed_dict=feed_dict)
+
+            sat_global_descriptor[val_i: val_i + sat_global_val.shape[0], :] = sat_global_val
+            grd_global_descriptor[val_i: val_i + grd_global_val.shape[0], :] = grd_global_val
+            val_i += sat_global_val.shape[0]
+
+        print('   compute accuracy')
+        val_accuracy = validate(grd_global_descriptor, sat_global_descriptor)
+        with open('../Result/' + MODEL_NAME + '_accuracy.txt', 'a') as file:
+            file.write('default score : ' + str(val_accuracy) + '\n')
+        print('   completed: accuracy = %.1f%%' % ( val_accuracy*100.0))
 
         # Train
         if is_training:
@@ -183,7 +209,7 @@ def train(start_epoch=1):
 
                 print('   compute accuracy')
                 val_accuracy = validate(grd_global_descriptor, sat_global_descriptor)
-                with open('../Result/' + str(network_type) + '_' + MODEL_NAME +'_accuracy.txt', 'a') as file:
+                with open('../Result/' + MODEL_NAME +'_accuracy.txt', 'a') as file:
                     file.write('epoch: ' + str(epoch) + ' = ' + str(val_accuracy) + '\n')
                 print('   %d: accuracy = %.1f%%' % (epoch, val_accuracy*100.0))
                 model_dir = '../Model/' + MODEL_NAME +'/' + str(epoch) + '/'
@@ -191,34 +217,6 @@ def train(start_epoch=1):
                     os.makedirs(model_dir)
                 save_path = saver.save(sess, model_dir + 'model.ckpt')
                 print("Model saved in file: %s" % save_path)
-        # ---------------------------------------------------------
-        else:
-            print('validate model...')
-            print('   compute global descriptors')
-            input_data.reset_scan()
-            sat_global_descriptor = np.zeros([input_data.get_test_dataset_size(), 4096])
-            grd_global_descriptor = np.zeros([input_data.get_test_dataset_size(), 4096])
-            val_i = 0
-            while True:
-                print('      progress %d' % val_i)
-                batch_sat, batch_grd = input_data.next_batch_scan(batch_size)
-                if batch_sat is None:
-                    break
-                feed_dict = {sat_x: batch_sat, grd_x: batch_grd, keep_prob: 1.0}
-                sat_global_val, grd_global_val = \
-                    sess.run([sat_global, grd_global], feed_dict=feed_dict)
-
-                sat_global_descriptor[val_i: val_i + sat_global_val.shape[0], :] = sat_global_val
-                grd_global_descriptor[val_i: val_i + grd_global_val.shape[0], :] = grd_global_val
-                val_i += sat_global_val.shape[0]
-
-            print('   compute accuracy')
-            val_accuracy = validate(grd_global_descriptor, sat_global_descriptor)
-            with open('../Result/' + MODEL_NAME + '_accuracy.txt', 'a') as file:
-                file.write('overall score : ' + str(val_accuracy) + '\n')
-            print('   completed: accuracy = %.1f%%' % ( val_accuracy*100.0))
-
-
 
 
 

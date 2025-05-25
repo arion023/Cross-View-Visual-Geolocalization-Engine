@@ -14,8 +14,8 @@ class InputData:
         elif self.dataset=="WAW":
             self.img_root = "D:/datasets/Warsaw/"
 
-        self.train_list = self.img_root + 'splits/sets/mix/train.csv'
-        self.test_list = self.img_root + 'splits/sets/mix/eval.csv'
+        self.train_list = self.img_root + 'splits/sets/districts/train.csv'
+        self.test_list = self.img_root + 'splits/sets/districts/eval.csv'
 
         print('InputData::__init__: load %s' % self.train_list)
         self.__cur_id = 0  # for training
@@ -68,7 +68,8 @@ class InputData:
 
             # satellite
             img = cv2.imread(self.img_root + self.id_test_list[img_idx][0])
-            # img = cv2.resize(img, (512, 512), interpolation=cv2.INTER_AREA)
+            if self.dataset=="CVUSA":
+                img = cv2.resize(img, (512, 512), interpolation=cv2.INTER_AREA)
 
             img = img.astype(np.float32)
             # img -= 100.0
@@ -81,7 +82,7 @@ class InputData:
             img = cv2.imread(self.img_root + self.id_test_list[img_idx][1])
 
             if self.dataset=="WAW":
-                img = img[800:-1000, :, :]
+                img = img[600:-1000, :, :]
                 img = cv2.resize(img, (1232, 224), interpolation=cv2.INTER_AREA)
 
             img = img.astype(np.float32)
@@ -140,8 +141,8 @@ class InputData:
             # ground
             img = cv2.imread(self.img_root + self.id_list[img_idx][1])
             if self.dataset=="WAW":
-                top_crop = random.randint(700, 900)
-                bottom_crop = random.randint(800, 1100)
+                top_crop = random.randint(500, 700)
+                bottom_crop = random.randint(900, 1100)
                 img = img[top_crop:-bottom_crop, :, :]
                 img = cv2.resize(img, (1232, 224), interpolation=cv2.INTER_AREA)
 
