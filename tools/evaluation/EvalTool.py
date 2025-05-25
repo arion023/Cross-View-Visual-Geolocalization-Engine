@@ -10,7 +10,7 @@ sys.path.append(
 from cvm_net import cvm_net_I, cvm_net_II
 from structures.InputData import InputDataEval
 from structures.InputData import InputDataContainer
-from charts.MatchesChart import MatchesChart
+from MatchesChart import MatchesChart
 import math
 import csv
 
