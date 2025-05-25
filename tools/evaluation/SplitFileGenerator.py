@@ -71,6 +71,12 @@ class SplitFileGenerator:
         for dist, ids in self.districts.items():
             for camera in self.dataset.cameras:
                 for season in self.dataset.seasons:
+                    max_id = ids[1]+1
+                    if season == "winter":
+                        if dist == "Center":
+                            continue
+                        elif dist == "Ursynow":
+                            max_id = 64
                     panos_full_prefix = (
                         self.panos_prefix
                         + season
@@ -83,7 +89,7 @@ class SplitFileGenerator:
                         + "/"
                     )
 
-                    for i in range(ids[0], ids[1] + 1):
+                    for i in range(ids[0], max_id):
                         rows += self.generate_rows(panos_full_prefix, i, 2)
 
         self.save_split(rows)
