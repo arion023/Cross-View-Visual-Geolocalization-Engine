@@ -1,8 +1,4 @@
 __pycache__
-/src/Model
-/src/Data
-/src/Result
-/src/CVM-Net/playground.py__pycache__
 /results
 /tools/resources/geojson
 /tools/resources/configs/config-tmp.json

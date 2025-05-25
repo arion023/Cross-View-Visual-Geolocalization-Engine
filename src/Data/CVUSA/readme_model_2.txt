@@ -1,1 +1,0 @@
-Please put the CVUSA dataset here after you download it.
