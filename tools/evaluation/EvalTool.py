@@ -4,7 +4,7 @@
 import sys
 
 sys.path.append(
-    "C:/Users/masik/Workspace/inzynierka/repos/crossview_localisation_tensorflow-2.x/src/CVM-Net"
+    "../model/src/CVM-Net"
 )
 
 from cvm_net import cvm_net_I, cvm_net_II
