@@ -5,22 +5,30 @@ import os, csv
 
 ROOT_DIR="D:/datasets/Warsaw/"
 DIR="tmp/"
-PANO_PATH="D:/datasets/Warsaw/panos/spring/Wilanow/PIXPRO/raw/001_1.JPG"
-SAT_PATH="sat/waw/2022/orto/19/001.jpg"
+ID = "014"
+PANO_PATH=f"D:/datasets/Warsaw/panos/autumn/Wilanow/PIXPRO/straighten/{ID}_1.JPG"
+ZL = 19
+SAT_PATH=f"sat/waw/2022/orto/{ZL}/{ID}.jpg"
 SAT_LIST = []
 
 # for 7360 x 3680 px pano image
 # recommended tile size is 184x184px (40x20) or 368x368px (20x10) or 736x736px (10x5)
 # other example sizes: 46x46px (160x80) or 92x92px (80x40) or
-TILE_SIZE = (736, 736)  # (height, width)
+TILE_SIZE = (368, 368)  # (height, width)
 
 
-def generate_splitfile():
-    pass
+def generate_splitfile(dir_path, pano_id, grid_size, pano_paths):
+    with open(ROOT_DIR + f"splits/occluded/{pano_id}_{int(grid_size[0])}x{int(grid_size[1])}_{ZL}zl.csv", "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([SAT_PATH, dir_path + pano_id + ".jpg","empty"])
+        writer.writerow([SAT_PATH, dir_path + pano_id + "_black.jpg","empty"])
+        for pano_path in pano_paths:
+            writer.writerow([SAT_PATH,  pano_path,"empty"])
+
 
 def generate_black_image(shape, dir_path, pano_id):
-    balck_img = np.zeros(shape, dtype=np.uint8)
-    cv2.imwrite(ROOT_DIR + dir_path + pano_id + "_black.jpg", balck_img)
+    black_img = np.zeros(shape, dtype=np.uint8)
+    cv2.imwrite(ROOT_DIR + dir_path + pano_id + "_black.jpg", black_img)
     print(f"Created black image: {dir_path + pano_id + '_black.jpg'}")
 
 
@@ -51,14 +59,7 @@ def generate_occlueded_panos(pano_img, dir_path, pano_id):
             cv2.imwrite(ROOT_DIR + occluded_pano_path, occluded_pano)
             print(f"Created occluded panorama: {occluded_pano_path}")
 
-    with open(ROOT_DIR + dir_path + f"split_occluded_{pano_id}_{int(grid_size[0])}x{int(grid_size[1])}.csv", "w", newline="") as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow([SAT_PATH, dir_path + pano_id + ".jpg","empty"])
-        writer.writerow([SAT_PATH, dir_path + pano_id + "_black.jpg","empty"])
-        for pano_path in pano_paths:
-            writer.writerow([SAT_PATH,  pano_path,"empty"])
-
-
+    generate_splitfile(dir_path, pano_id, grid_size, pano_paths)
 
 
 def main():
