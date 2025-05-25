@@ -1,20 +1,20 @@
 [
     {
-      "name": "auto",
+      "name": "CVM-NET-I_occluded_014_1_5x10_19zl",
       "model": "CVM-NET-I",
       "weights_name": "original",
       "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
       "root_dir": "D:/datasets/Warsaw/",
       "top_k": 0.10,
       "dataset" : {
-        "splitfile":"auto",
+        "splitfile":"splits/occluded/014_1_5x10_19zl.csv",
         "districts": ["Warsaw"],
         "cameras": ["PIXPRO"],
         "seasons": ["autumn"],
         "modification": "straighten",
-        "crop": [600, 1000],
+        "crop": [0, 0],
         "angle": "orto",
-        "zoom_level": 20
+        "zoom_level": 19
       },
       "results" : {
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
@@ -25,28 +25,28 @@
       },
       "charts" : {
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
-        "matches_chart": true,
-        "display_nearest": 3,
+        "matches_chart": false,
+        "display_nearest": 2,
 
         "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
        }
     },
     {
-      "name": "CVM-NET-I_original_Warsaw_Random_130_PIXPRO_autumn_straighten_crop_600_1000_orto_20zl",
+      "name": "CVM-NET-I_occluded_020_1_5x10_19zl",
       "model": "CVM-NET-I",
       "weights_name": "original",
       "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
       "root_dir": "D:/datasets/Warsaw/",
       "top_k": 0.10,
       "dataset" : {
-        "splitfile":"splits/Warsaw_Random_130_PIXPRO_autumn_straighten_orto_20zl.csv",
-        "districts": ["Warsaw", "Random"],
+        "splitfile":"splits/occluded/020_1_5x10_19zl.csv",
+        "districts": ["Warsaw"],
         "cameras": ["PIXPRO"],
         "seasons": ["autumn"],
         "modification": "straighten",
-        "crop": [600, 1000],
+        "crop": [0, 0],
         "angle": "orto",
-        "zoom_level": 20
+        "zoom_level": 19
       },
       "results" : {
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
@@ -57,28 +57,28 @@
       },
       "charts" : {
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
-        "matches_chart": true,
-        "display_nearest": 3,
+        "matches_chart": false,
+        "display_nearest": 2,
 
         "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
-      }
+       }
     },
-    {
-      "name": "CVM-NET-I_original_Warsaw_Random_930_PIXPRO_autumn_straighten_crop_600_1000_orto_20zl",
+        {
+      "name": "CVM-NET-I_occluded_032_1_5x10_19zl",
       "model": "CVM-NET-I",
       "weights_name": "original",
       "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
       "root_dir": "D:/datasets/Warsaw/",
       "top_k": 0.10,
       "dataset" : {
-        "splitfile":"splits/Warsaw_Random_930_PIXPRO_autumn_straighten_orto_20zl.csv",
-        "districts": ["Warsaw", "Random"],
+        "splitfile":"splits/occluded/032_1_5x10_19zl.csv",
+        "districts": ["Warsaw"],
         "cameras": ["PIXPRO"],
         "seasons": ["autumn"],
         "modification": "straighten",
-        "crop": [600, 1000],
+        "crop": [0, 0],
         "angle": "orto",
-        "zoom_level": 20
+        "zoom_level": 19
       },
       "results" : {
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
@@ -89,28 +89,28 @@
       },
       "charts" : {
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
-        "matches_chart": true,
-        "display_nearest": 3,
+        "matches_chart": false,
+        "display_nearest": 2,
 
         "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
-      }
+       }
     },
-    {
-      "name": "CVM-NET-I_original_Warsaw_Random_2930_PIXPRO_autumn_straighten_crop_600_1000_orto_20zl",
+        {
+      "name": "CVM-NET-I_occluded_035_1_5x10_19zl",
       "model": "CVM-NET-I",
       "weights_name": "original",
       "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
       "root_dir": "D:/datasets/Warsaw/",
       "top_k": 0.10,
       "dataset" : {
-        "splitfile":"splits/Warsaw_Random_2930_PIXPRO_autumn_straighten_orto_20zl.csv",
-        "districts": ["Warsaw", "Random"],
+        "splitfile":"splits/occluded/035_1_5x10_19zl.csv",
+        "districts": ["Warsaw"],
         "cameras": ["PIXPRO"],
         "seasons": ["autumn"],
         "modification": "straighten",
-        "crop": [600, 1000],
+        "crop": [0, 0],
         "angle": "orto",
-        "zoom_level": 20
+        "zoom_level": 19
       },
       "results" : {
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
@@ -121,28 +121,28 @@
       },
       "charts" : {
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
-        "matches_chart": true,
-        "display_nearest": 3,
+        "matches_chart": false,
+        "display_nearest": 2,
 
         "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
-      }
+       }
     },
-    {
-      "name": "CVM-NET-I_original_Warsaw_Random_7930_PIXPRO_autumn_straighten_crop_600_1000_orto_20zl",
+        {
+      "name": "CVM-NET-I_occluded_051_1_5x10_19zl",
       "model": "CVM-NET-I",
       "weights_name": "original",
       "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
       "root_dir": "D:/datasets/Warsaw/",
       "top_k": 0.10,
       "dataset" : {
-        "splitfile":"splits/Warsaw_Random_7930_PIXPRO_autumn_straighten_orto_20zl.csv",
-        "districts": ["Warsaw", "Random"],
+        "splitfile":"splits/occluded/051_1_5x10_19zl.csv",
+        "districts": ["Warsaw"],
         "cameras": ["PIXPRO"],
         "seasons": ["autumn"],
         "modification": "straighten",
-        "crop": [600, 1000],
+        "crop": [0, 0],
         "angle": "orto",
-        "zoom_level": 20
+        "zoom_level": 19
       },
       "results" : {
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
@@ -153,42 +153,42 @@
       },
       "charts" : {
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
-        "matches_chart": true,
-        "display_nearest": 3,
+        "matches_chart": false,
+        "display_nearest": 2,
 
         "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
-      }
+       }
     },
-    {
-        "name": "CVUSA-eval",
-        "model": "CVM-NET-I",
-        "weights_name": "original",
-        "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
-        "root_dir": "D:/datasets/CVUSA/CVPR_subset/",
-        "top_k": 0.10,
-        "dataset" : {
-          "splitfile":"splits/val-19zl.csv",
-          "districts": [""],
-          "cameras": [""],
-          "seasons": [""],
-          "modification": "",
-          "crop": [0, 0],
-          "angle": "",
-          "zoom_level": 0
-        },
-        "results" : {
-          "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
-          "accuracy" : {
-            "save":true,
-            "filename": "cvusa"
-          }
-        },
-        "charts" : {
-          "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
-          "matches_chart": false,
-          "display_nearest": 4,
+        {
+      "name": "CVM-NET-I_occluded_059_1_5x10_19zl",
+      "model": "CVM-NET-I",
+      "weights_name": "original",
+      "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+      "root_dir": "D:/datasets/Warsaw/",
+      "top_k": 0.10,
+      "dataset" : {
+        "splitfile":"splits/occluded/059_1_5x10_19zl.csv",
+        "districts": ["Warsaw"],
+        "cameras": ["PIXPRO"],
+        "seasons": ["autumn"],
+        "modification": "straighten",
+        "crop": [0, 0],
+        "angle": "orto",
+        "zoom_level": 19
+      },
+      "results" : {
+        "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
+        "accuracy" : {
+          "save":true,
+          "filename": "tmp"
+        }
+      },
+      "charts" : {
+        "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
+        "matches_chart": false,
+        "display_nearest": 2,
 
-          "custom_info": ""
-         }
-      }
-  ]
+        "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
+       }
+    }
+]

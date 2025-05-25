@@ -1,0 +1,34 @@
+[
+  {
+    "name": "put here the your name of the model - it will be used as a name for results, if it is standard use word auto to generate name from dataset params",
+    "model": "CVM-NET-I",
+    "weights_name": "put here the name of the weights - it will be used as a name for results",
+    "weights_path": "full path to the weights of the model.ckpt file - like this  .../CVM-NET-I_model/model.ckpt",
+    "root_dir": "put path to the dataset, example: D:/datasets/Warsaw/",
+    "top_k": 0.01,
+    "dataset" : {
+      "splitfile":"put here splitfile path relativle to root_dir or write auto if the params are standard",
+      "districts": ["Warsaw"],
+      "cameras": ["PIXPRO"],
+      "seasons": ["autumn", "spring", "winter"],
+      "modification": "straighten or raw",
+      "crop": [600, 1000],
+      "angle": "put an angle of the images, it can be orto, oblique-north, oblique-south, oblique-east, oblique-west",
+      "zoom_level": 19
+    },
+    "results" : {
+      "path": "put here path where results will be saved, example: C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
+      "accuracy" : {
+        "save":true,
+        "filename": "name of the filename where accuracy will be saved, example: finetune-mix"
+      }
+    },
+    "charts" : {
+      "path": "put here path where charts will be saved, example: C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
+      "matches_chart": true,
+      "display_nearest": 3,
+
+      "custom_info": "put here custom info for the chart, it will be displayed on the chart, example: Weights taken from the original paper (93% accuracy on reference model top-1%)"
+     }
+  }
+]

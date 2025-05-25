@@ -1,66 +1,66 @@
 [
   {
-    "name": "auto",
+    "name": "CVM-NET-I_finetune_mix_before",
     "model": "CVM-NET-I",
     "weights_name": "original",
     "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
     "root_dir": "D:/datasets/Warsaw/",
-    "top_k": 0.10,
+    "top_k": 0.01,
     "dataset" : {
-      "splitfile":"auto",
-      "districts": ["Warsaw"],
+      "splitfile":"splits/sets/mix/eval-random-1000.csv",
+      "districts": [""],
       "cameras": ["PIXPRO"],
-      "seasons": ["autumn"],
+      "seasons": ["", "", ""],
       "modification": "straighten",
       "crop": [600, 1000],
       "angle": "orto",
-      "zoom_level": 20
+      "zoom_level": 19
     },
     "results" : {
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
       "accuracy" : {
         "save":true,
-        "filename": "seasons"
+        "filename": "finetune-mix"
       }
     },
     "charts" : {
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
       "matches_chart": true,
-      "display_nearest": 3,
+      "display_nearest": 4,
 
-      "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
+      "custom_info": "Weights taken from the original paper (93% accuracy on reference model top-1%)"
      }
   },
-  {
-    "name": "CVM-NET-I_original_Warsaw_PIXPRO_winter_strighten_600_1000_orto_20zl",
+    {
+    "name": "CVM-NET-I_finetune_mix_after",
     "model": "CVM-NET-I",
     "weights_name": "original",
-    "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+    "weights_path": "C:/Users/masik/Workspace/inzynierka/repos/crossview_localisation_tensorflow-2.x/src/Model/CVM-NET-I_mix_v2_finetuning_all/2/model.ckpt",
     "root_dir": "D:/datasets/Warsaw/",
-    "top_k": 0.10,
+    "top_k": 0.01,
     "dataset" : {
-      "splitfile":"splits/Warsaw_PIXPRO_winter_straighten_orto_20zl.csv",
-      "districts": ["Warsaw"],
+      "splitfile":"splits/sets/mix/eval-random-1000.csv",
+      "districts": [""],
       "cameras": ["PIXPRO"],
-      "seasons": ["winter"],
+      "seasons": ["", "", ""],
       "modification": "straighten",
       "crop": [600, 1000],
       "angle": "orto",
-      "zoom_level": 0
+      "zoom_level": 19
     },
     "results" : {
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
       "accuracy" : {
         "save":true,
-        "filename": "seasons"
+        "filename": "finetune-seasons"
       }
     },
     "charts" : {
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
       "matches_chart": true,
-      "display_nearest": 3,
+      "display_nearest": 4,
 
-      "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
+      "custom_info": "Weights fintuned on mixed training set"
      }
-  }
+    }
   ]

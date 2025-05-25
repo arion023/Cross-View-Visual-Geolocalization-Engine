@@ -1,0 +1,34 @@
+[
+  {
+    "name": "CVM-NET-I_original_All_Warsaw_Tiled_19_PIXPRO_autumn_straighten_crop_800_1000_orto_19zl",
+    "model": "CVM-NET-I",
+    "weights_name": "original",
+    "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+    "root_dir": "D:/datasets/Warsaw/",
+    "top_k": 0.10,
+    "dataset" : {
+      "splitfile":"splits/Warsaw_Tile_19_PIXPRO_autumn_straighten_orto_19zl.csv",
+      "districts": ["Warsaw"],
+      "cameras": ["PIXPRO"],
+      "seasons": ["autumn"],
+      "modification": "straighten",
+      "crop": [800, 1000],
+      "angle": "",
+      "zoom_level": 0
+    },
+    "results" : {
+      "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
+      "accuracy" : {
+        "save":true,
+        "filename": "tmp"
+      }
+    },
+    "charts" : {
+      "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
+      "matches_chart": false,
+      "display_nearest": 0,
+
+      "custom_info": "Weights taken from the original paper (91.4% accuracy on reference model top1%)"
+     }
+  }
+]

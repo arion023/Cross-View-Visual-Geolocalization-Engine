@@ -1,20 +1,20 @@
 [
   {
-    "name": "auto",
+    "name": "CVM-NET-I_original_Sequences_Warsaw_512px_PIXPRO_spring_straighten_crop_600_1000_orto_19zl",
     "model": "CVM-NET-I",
     "weights_name": "original",
     "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
     "root_dir": "D:/datasets/Warsaw/",
     "top_k": 0.10,
     "dataset" : {
-      "splitfile":"auto",
+      "splitfile":"splits/sequences/Warsaw-spring-19zl-512px-all.csv",
       "districts": ["Warsaw"],
       "cameras": ["PIXPRO"],
       "seasons": ["autumn"],
       "modification": "straighten",
       "crop": [600, 1000],
-      "angle": "orto",
-      "zoom_level": 20
+      "angle": "",
+      "zoom_level": 0
     },
     "results" : {
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
@@ -25,8 +25,8 @@
     },
     "charts" : {
       "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
-      "matches_chart": true,
-      "display_nearest": 3,
+      "matches_chart": false,
+      "display_nearest": 0,
 
       "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
      }
