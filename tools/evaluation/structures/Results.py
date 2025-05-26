@@ -16,10 +16,11 @@ class Results(Munch):
         super().__init__(results_config)
         self.input_data = input_data
         self.name = input_data.name
+        self.show = True
         self.descriptors = Munch()
         self.distances = Munch()
         self.accuracy = Munch(self.accuracy)
-
+        self.shortcut = self.name
         rasults_prefix_path = self.path
 
         self.descriptors.sat_save_path = (
@@ -126,20 +127,36 @@ class Results(Munch):
         self.load_top100_accuracy()
         print("All results loaded successfully.")
 
+    def check_name(self, name):
+        if name[0] == "_":
+            name = name[1:]
+            self.show = False
+        else:
+            self.show = True
+        splited = name.split("=")
+
+        name = splited[0]
+        if len(splited) > 1:
+            self.shortcut = splited[-1]
+        return name
+
     def load_percentage_accuracy(self):
         with open(self.accuracy.percentage_save_path, "r") as file:
             reader = csv.reader(file)
             for row in reader:
-                if row[0] == self.name:
+                name = self.check_name(row[0])
+                if  name == self.name:
                     self.accuracy.percentage_values = np.array(row[1:], dtype=float)
                     break
+            print(f"Error with loading {self.name}, {name}")
         print("Percentage accuracy loaded successfully.")
 
     def load_top100_accuracy(self):
         with open(self.accuracy.top100_save_path, "r") as file:
             reader = csv.reader(file)
             for row in reader:
-                if row[0] == self.name:
+                name = self.check_name(row[0])
+                if name == self.name:
                     self.accuracy.top100_values = np.array(row[1:], dtype=float)
                     break
         print("Top100 accuracy loaded successfully.")
