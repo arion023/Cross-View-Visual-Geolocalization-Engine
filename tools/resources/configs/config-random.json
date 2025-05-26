@@ -126,5 +126,37 @@
 
       "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
     }
+  },
+  {
+    "name": "CVUSA-eval",
+    "model": "CVM-NET-I",
+    "weights_name": "original",
+    "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+    "root_dir": "D:/datasets/CVUSA/CVPR_subset/",
+    "top_k": 0.01,
+    "dataset" : {
+      "splitfile":"splits/val-19zl.csv",
+      "districts": [""],
+      "cameras": [""],
+      "seasons": [""],
+      "modification": "",
+      "crop": [0, 0],
+      "angle": "",
+      "zoom_level": 0
+    },
+    "results" : {
+      "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
+      "accuracy" : {
+        "save":true,
+        "filename": "cvusa"
+      }
+    },
+    "charts" : {
+      "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
+      "matches_chart": false,
+      "display_nearest": 4,
+
+      "custom_info": ""
+     }
   }
 ]
