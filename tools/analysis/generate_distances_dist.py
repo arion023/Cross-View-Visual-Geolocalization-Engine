@@ -1,7 +1,6 @@
 import csv
 import matplotlib.pyplot as plt
 
-# Read data from CSV file
 data = {}
 with open("./../../results/distances/tmp.csv", "r") as file:
     reader = csv.reader(file)
@@ -14,7 +13,7 @@ with open("./../../results/distances/tmp.csv", "r") as file:
         data[key] = values
         # if counter > 20:
         #     break
-# Create subplots
+
 num_plots = len(data)
 print(num_plots)
 fig, axes = plt.subplots(nrows=num_plots, ncols=1, figsize=(2, 140))

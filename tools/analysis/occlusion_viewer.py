@@ -10,9 +10,10 @@ ID = "014"
 FULL_ID = ID+"_1_90"
 GRID = (10, 20)  # (height, width)
 ZL=19
+CROP = "" + "crop_"
 GRID_STR = f"{GRID[0]}x{GRID[1]}"
 PANO = f"tmp/{FULL_ID}/"+GRID_STR +f"/{FULL_ID}.jpg"
-DISTANCE_FILE = f"C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/distances/CVM-NET-I_occluded_"+FULL_ID+"_"+GRID_STR+f"_{ZL}zl.csv"
+DISTANCE_FILE = f"C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/distances/CVM-NET-I_occluded_{CROP}"+FULL_ID+"_"+GRID_STR+f"_{ZL}zl.csv"
 
 
 def normalize_image(image):
@@ -55,12 +56,17 @@ for idx, delta in zip(grid_distances.index, deltas):
 img_mask=normalize_image(img_mask) * 255
 img_mask=img_mask.astype(np.uint8)
 
+img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+img_gray //= 3
+img_gray *= 2
+img = cv2.cvtColor(img_gray, cv2.COLOR_GRAY2BGR)
+
 img_heatmap = cv2.add(img, img_mask)
 
 img_heatmap = np.clip(img_heatmap, 0, 255).astype(np.uint8)
 
 print(img_heatmap.shape)
 # print(mask)
-cv2.imwrite(ROOT_DIR + f"tmp/{FULL_ID}/"+GRID_STR + f"/{FULL_ID}_heatmap.jpg", img_heatmap)
+cv2.imwrite(ROOT_DIR + f"tmp/{FULL_ID}/"+GRID_STR + f"/{FULL_ID}_{CROP}heatmap.jpg", img_heatmap)
 
 

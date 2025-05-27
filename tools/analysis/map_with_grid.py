@@ -49,8 +49,8 @@ print(bounds)
 folium.Rectangle(
     bounds=bounds,
     color='red',
-    fill=False,  # całkowicie przezroczyste wypełnienie
-    weight=6  # grubość obramowania
+    fill=False,
+    weight=6
 ).add_to(m)
 
 folium.LayerControl().add_to(m)

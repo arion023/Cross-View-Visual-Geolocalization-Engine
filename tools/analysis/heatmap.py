@@ -37,7 +37,6 @@ area = gpd.read_file("./tools/geojson/warszawa-dzielnice.geojson").to_crs(
 
 print(area.total_bounds)
 
-# 2. Oblicz bounding box
 minlon, minlat, maxlon, maxlat = area.total_bounds
 tiles = list(mercantile.tiles(minlon, minlat, maxlon, maxlat, ZOOM-1))
 

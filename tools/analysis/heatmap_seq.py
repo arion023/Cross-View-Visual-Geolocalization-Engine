@@ -222,7 +222,6 @@ for SEQUENCE_N, ZOOM in product(SEQUENCES, ZOOMS):
 
     #-------------
     # ADDDITIONAL
-    # #TODO additional backward approximation
     #-------------
     # if BACKWARD:
     #     for i in range(len(pano_paths), seq_probability.shape[2]-1):
