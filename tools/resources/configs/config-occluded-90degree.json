@@ -20,7 +20,7 @@
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
         "accuracy" : {
           "save":true,
-          "filename": "tmp"
+          "filename": "occluded90degree"
         }
       },
       "charts" : {
@@ -52,7 +52,7 @@
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
         "accuracy" : {
           "save":true,
-          "filename": "tmp"
+          "filename": "occluded90degree"
         }
       },
       "charts" : {
@@ -64,7 +64,7 @@
        }
     },
     {
-      "name": "CVM-NET-I_occluded_014_1_90_10x20_19zl",
+      "name": "CVM-NET-I_occluded_crop_014_1_90_10x20_19zl",
       "model": "CVM-NET-I",
       "weights_name": "original",
       "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
@@ -76,7 +76,7 @@
         "cameras": ["PIXPRO"],
         "seasons": ["autumn"],
         "modification": "straighten",
-        "crop": [0, 0],
+        "crop": [736, 1104],
         "angle": "orto",
         "zoom_level": 19
       },
@@ -84,7 +84,7 @@
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
         "accuracy" : {
           "save":true,
-          "filename": "tmp"
+          "filename": "occluded90degree"
         }
       },
       "charts" : {
@@ -96,7 +96,7 @@
        }
     },
         {
-      "name": "CVM-NET-I_occluded_035_1_90_10x20_19zl",
+      "name": "CVM-NET-I_occluded_crop_035_1_90_10x20_19zl",
       "model": "CVM-NET-I",
       "weights_name": "original",
       "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
@@ -108,7 +108,7 @@
         "cameras": ["PIXPRO"],
         "seasons": ["autumn"],
         "modification": "straighten",
-        "crop": [0, 0],
+        "crop": [736, 1104],
         "angle": "orto",
         "zoom_level": 19
       },
@@ -116,7 +116,71 @@
         "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
         "accuracy" : {
           "save":true,
-          "filename": "tmp"
+          "filename": "occluded90degree"
+        }
+      },
+      "charts" : {
+        "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
+        "matches_chart": false,
+        "display_nearest": 2,
+
+        "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
+       }
+    },
+          {
+      "name": "CVM-NET-I_occluded_crop_014_1_10x20_19zl",
+      "model": "CVM-NET-I",
+      "weights_name": "original",
+      "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+      "root_dir": "D:/datasets/Warsaw/",
+      "top_k": 0.10,
+      "dataset" : {
+        "splitfile":"splits/occluded/014_1_10x20_19zl.csv",
+        "districts": ["Warsaw"],
+        "cameras": ["PIXPRO"],
+        "seasons": ["autumn"],
+        "modification": "straighten",
+        "crop": [736, 1104],
+        "angle": "orto",
+        "zoom_level": 19
+      },
+      "results" : {
+        "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
+        "accuracy" : {
+          "save":true,
+          "filename": "occluded90degree"
+        }
+      },
+      "charts" : {
+        "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/charts/",
+        "matches_chart": false,
+        "display_nearest": 2,
+
+        "custom_info": "Weights taken from the original paper (93% accuracy on reference model top1%)"
+       }
+    },
+    {
+      "name": "CVM-NET-I_occluded_crop_035_1_10x20_19zl",
+      "model": "CVM-NET-I",
+      "weights_name": "original",
+      "weights_path": "C:/Users/masik/Workspace/inzynierka/references/CVM-NET-Hu-Lee/models/CVM-Net_model/CVM-NET-I/CVM-Net-I_model/model.ckpt",
+      "root_dir": "D:/datasets/Warsaw/",
+      "top_k": 0.10,
+      "dataset" : {
+        "splitfile":"splits/occluded/035_1_10x20_19zl.csv",
+        "districts": ["Warsaw"],
+        "cameras": ["PIXPRO"],
+        "seasons": ["autumn"],
+        "modification": "straighten",
+        "crop": [736, 1104],
+        "angle": "orto",
+        "zoom_level": 19
+      },
+      "results" : {
+        "path": "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/",
+        "accuracy" : {
+          "save":true,
+          "filename": "occluded90degree"
         }
       },
       "charts" : {
