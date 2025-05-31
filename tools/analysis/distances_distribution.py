@@ -2,8 +2,9 @@ import matplotlib.pyplot as plt
 import csv
 
 # DIST_FILE = "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/distances/CVM-NET-I_original_Warsaw_Random_1000_PIXPRO_all_seasons_straighten_crop_600_1000_orto_19zl.csv"
-DIST_FILE = "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/distances/CVM-NET-I_finetune_districts_after.csv"
-
+DIST_FILE = "C:/Users/masik/Workspace/inzynierka/repos/BEng-MK/results/distances/CVM-NET-I_finetune_districts_before.csv"
+TEXT = "przed dostrojeniem"
+# TEXT = "po dostrajaniu"
 correct_distances = []
 wrong_distances = []
 
@@ -33,7 +34,7 @@ plt.rcParams.update({
 })
 
 # Plot the histograms
-plt.figure(figsize=(10, 8))
+plt.figure(figsize=(10, 7))
 plt.hist(wrong_distances, bins=20, color='red', alpha=0.5, density=True, label='Rozkład dystansów dla błędnych dopasowań')
 plt.hist(correct_distances, bins=20, color='blue', alpha=0.5, density=True, label='Rozkład dystansów dla parawidłowych dopasowań')
 
@@ -41,7 +42,7 @@ plt.hist(correct_distances, bins=20, color='blue', alpha=0.5, density=True, labe
 plt.xlim(0, 3.5)
 plt.xlabel('Dystans')
 plt.ylabel('Częstość')
-plt.title('Histogram dystansów w przestrzeni cech')
+plt.title('Histogram dystansów w przestrzeni cech ' + TEXT)
 plt.legend()
 
 # Show the plot
