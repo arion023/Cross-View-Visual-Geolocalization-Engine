@@ -8,16 +8,17 @@ import cv2
 from folium.features import DivIcon
 from itertools import product
 
-ZOOMS = [20]
+ZOOMS = [19]
 # SEQUENCE_N = 1
 SEQUENCES = [1,2,3,4,5]
+METHOD = 1
 CLIP = 1
+TOP_N = 10
 #Generating gaussian kernel
 KERNEL_SIZE = 7
 SIGMA = 1
 ALFA = 0.9
 BETA = 1 - ALFA
-METHOD = 1
 BACKWARD=False
 # DISTANCE_PATH = "./results/distances/CVM-NET-I_original_Warsaw_Tile_19_PIXPRO_autumn_straighten_crop_600_1000_orto_19zl.csv"
 # panos/spring/Wilanow/PIXPRO/raw/
@@ -50,7 +51,7 @@ for SEQUENCE_N, ZOOM in product(SEQUENCES, ZOOMS):
         show=True
     ).add_to(m)
 
-    area = gpd.read_file("./tools/geojson/warszawa-dzielnice.geojson").to_crs(
+    area = gpd.read_file("./tools/resources/geojson/warszawa-dzielnice.geojson").to_crs(
         "EPSG:4326"
     )  # Web Mercator
 
@@ -259,7 +260,7 @@ for SEQUENCE_N, ZOOM in product(SEQUENCES, ZOOMS):
         location=[pano_coords[i][0], pano_coords[i][1]],
         tooltip=f"ID {pano_id} ({i})",
         icon=folium.Icon(icon="camera", color="red"),
-        ).add_to(sequence_line)
+        ).add_to(sequence_markers)
 
         folium.raster_layers.ImageOverlay(
             image=seq_probability[:,:,i],
@@ -292,7 +293,7 @@ for SEQUENCE_N, ZOOM in product(SEQUENCES, ZOOMS):
 
     image = seq_probability[:, :, len(pano_ids)-1]
 
-    flat_indices = np.argpartition(image.flatten(), -10)[-10:]
+    flat_indices = np.argpartition(image.flatten(), -10)[-TOP_N:]
     top_indices = flat_indices[np.argsort(-image.flatten()[flat_indices])]
 
     top_coords = [np.unravel_index(idx, image.shape) for idx in top_indices]
