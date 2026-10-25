@@ -1,4 +1,4 @@
-# This is fork of repo, please refere to orgyinal repo.
+# This is fork of repo, please refere to oryginal repo.
 
 Updated the code for compatibility with TensorFlow 2.x.
 
