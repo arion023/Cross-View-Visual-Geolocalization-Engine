@@ -6,7 +6,7 @@
 ![GeoPandas](https://img.shields.io/badge/GeoPandas-Spatial_Data-139C5A?style=for-the-badge)
 ![Dataset](https://img.shields.io/badge/Custom_Dataset-141_GB_(1.43M_Files)-blue?style=for-the-badge)
 
-> **TL;DR:** An end-to-end Computer Vision system that determines the geographic location of ground-level $360^{\circ}$ panoramic photos by matching them against $1.4\text{M+}$ overhead satellite/aerial map tiles—**without using GPS or EXIF metadata**. Built as a B.Sc. Engineering Thesis at the Warsaw University of Technology (2025).
+> **TL;DR:** An end-to-end Computer Vision system that determines the geographic location of ground-level $360^{\circ}$ panoramic photos by matching them against $1.4\text{M+}$ overhead satellite/aerial map tiles - **without using GPS or EXIF metadata**. Built as a B.Sc. Engineering Thesis at the Warsaw University of Technology (2025).
 
 ---
 
@@ -14,11 +14,6 @@
 
 Locating a single ground photo across an entire metropolis ($62,465$ aerial tiles at Zoom 19) is highly ambiguous due to repetitive urban structures. To solve this, I designed a **spatial-temporal sequence filtering algorithm** that updates location probabilities over consecutive frames using Gaussian spatial smoothing.
 
-<!-- 
-💡 INSTRUKCJA DO GIFÓW: 
-Wygeneruj klatki za pomocą skryptu `heatmap_seq.py` dla kolejnych kroków sekwencji (i = 1, 2, ..., n), 
-połącz je w plik GIF (np. za pomocą ffmpeg lub ezgif.com) i wrzuć do folderu `docs/gifs/`.
--->
 <div align="center">
   <table>
     <tr>
@@ -31,7 +26,7 @@ połącz je w plik GIF (np. za pomocą ffmpeg lub ezgif.com) i wrzuć do folderu
       <td align="center" width="50%">
         <img src="docs/gifs/sequence_S5_ursynow.gif" alt="Sequence S5 Localization GIF" width="100%"/>
         <br>
-        <b>Sequence S5 (Ursynów District - 3.7 km)</b><br>
+        <b>TODO (add gif) Sequence S5 (Ursynów District - 3.7 km)</b><br>
         <em>Converges to <b>Top-1</b> exact tile match out of 62,465 tiles.</em>
       </td>
     </tr>
