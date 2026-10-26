@@ -23,19 +23,13 @@ Locating a single ground photo across an entire metropolis ($62,465$ aerial tile
         <b>Sequence S4 (Warsaw City Center - 2.5 km)</b><br>
         <em>Converges to <b>Top-2</b> exact tile match out of 62,465 tiles.</em>
       </td>
-      <td align="center" width="50%">
-        <img src="docs/gifs/sequence_S5_ursynow.gif" alt="Sequence S5 Localization GIF" width="100%"/>
-        <br>
-        <b>TODO (add gif) Sequence S5 (Ursynów District - 3.7 km)</b><br>
-        <em>Converges to <b>Top-1</b> exact tile match out of 62,465 tiles.</em>
-      </td>
     </tr>
   </table>
 </div>
 
 ---
 
-## Key Engineering & ML Highlights
+## Key Engineering
 
 * **Data Engineering at Scale:** Built a custom geospatial dataset (**Warsaw Dataset** – **141 GB**, **1,432,268 files**) by scraping and stitching Web Mercator (`EPSG:3857`) aerial tiles across 4 zoom levels ($18\text{--}21$) and manually capturing multi-season $360^{\circ}$ street-level panoramas across 103 locations.
 * **Domain Adaptation & Fine-Tuning:** Adapted the **CVM-Net** architecture (Siamese VGG16 + NetVLAD) from US training data (CVUSA) to European urban architecture, boosting **Top-1 accuracy from ~3% to ~77%** on challenging evaluation splits using only ~300 training pairs and rotational augmentation.
